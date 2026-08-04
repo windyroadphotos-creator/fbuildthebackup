@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build The Backup — Payment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@600&family=Space+Mono:wght@400;700&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg-deep:#14181A; --bg-panel:#1C2320; --accent-olive:#8A9A5B; --accent-orange:#E2572B; --text-paper:#EDEAE2; --text-muted:#93A08D; --line:rgba(237,234,226,0.13); }
+  body{ margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg-deep); color:var(--text-paper); font-family:'IBM Plex Sans', sans-serif; }
+  .card{ max-width:480px; padding:44px; background:var(--bg-panel); border:1px solid var(--line); border-radius:3px; text-align:center; }
+  h1{ font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:600; font-size:24px; margin:0 0 14px; }
+  p{ color:var(--text-muted); font-size:15px; line-height:1.6; margin:0 0 22px; }
+  .meter{ font-family:'Space Mono', monospace; font-size:12px; color:var(--accent-olive); letter-spacing:0.08em; margin-bottom:22px; }
+  a.btn{ display:inline-block; font-family:'Space Mono', monospace; font-size:13px; text-transform:uppercase; letter-spacing:0.05em; padding:13px 24px; border-radius:2px; background:var(--accent-orange); color:#14181A; text-decoration:none; font-weight:700; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="meter" id="status-line">CHECKING PAYMENT STATUS…</div>
+    <h1 id="title">Confirming your payment</h1>
+    <p id="message">This usually takes a few seconds while the payment provider notifies us. Don't close this tab.</p>
+    <a class="btn hidden" id="enter-btn" href="index.html">Enter the member area →</a>
+  </div>
+
+<script>
+  // Same as index.html — edit if your backend lives elsewhere.
+  const API_BASE = 'https://buildthebackup-production.up.railway.app';
+
+  async function poll() {
+    try {
+      const res = await fetch(API_BASE + '/api/checkout/status', { credentials: 'include' });
+      if (!res.ok) throw new Error('not signed in');
+      const data = await res.json();
+      if (data.status === 'active') {
+        document.getElementById('status-line').textContent = 'PAYMENT CONFIRMED';
+        document.getElementById('title').textContent = "You're in.";
+        document.getElementById('message').textContent = 'Your membership is active. Head into the member area whenever you\'re ready.';
+        document.getElementById('enter-btn').classList.remove('hidden');
+        return;
+      }
+    } catch (e) {
+      // fall through and retry
+    }
+    setTimeout(poll, 2000);
+  }
+  poll();
+</script>
+</body>
+</html>

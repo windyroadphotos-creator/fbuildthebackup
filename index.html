@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build The Backup — Offline Resilience, Privacy & Communication</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#14181A; --bg-panel:#1C2320; --bg-panel-light:#252E29;
+    --accent-olive:#8A9A5B; --accent-orange:#E2572B;
+    --text-paper:#EDEAE2; --text-muted:#93A08D;
+    --line: rgba(237,234,226,0.13); --line-soft: rgba(237,234,226,0.06); --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{ margin:0; background:var(--bg-deep); color:var(--text-paper); font-family:'IBM Plex Sans', sans-serif; line-height:1.6; }
+  .mono{ font-family:'Space Mono', monospace; }
+  .display{ font-family:'Oswald', sans-serif; text-transform:uppercase; }
+  a{ color:inherit; }
+  button{ font-family:inherit; cursor:pointer; }
+  :focus-visible{ outline:2px solid var(--accent-orange); outline-offset:3px; }
+  .hidden{ display:none !important; }
+  .wrap{ max-width:1080px; margin:0 auto; padding:0 28px; }
+  .eyebrow{ font-family:'Space Mono', monospace; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent-orange); display:flex; align-items:center; gap:10px; margin:0 0 18px; }
+  .eyebrow::before{ content:""; width:22px; height:1px; background:var(--accent-orange); display:inline-block; }
+
+  .nav{ display:flex; align-items:center; justify-content:space-between; padding:26px 28px; max-width:1080px; margin:0 auto; }
+  .nav .logo{ font-family:'Oswald', sans-serif; font-weight:600; font-size:20px; letter-spacing:0.03em; text-transform:uppercase; }
+  .nav .logo span{ color:var(--accent-orange); }
+  .nav-links{ display:flex; gap:30px; font-family:'Space Mono', monospace; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; }
+  .nav-links a{ text-decoration:none; color:var(--text-muted); }
+  .nav-links a:hover{ color:var(--text-paper); }
+  .btn{ font-family:'Space Mono', monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; padding:11px 20px; border-radius:var(--radius); border:1px solid var(--accent-olive); background:transparent; color:var(--accent-olive); transition:background .2s, color .2s; }
+  .btn:hover{ background:var(--accent-olive); color:#14181A; }
+  .btn-solid{ background:var(--accent-orange); border-color:var(--accent-orange); color:#14181A; font-weight:700; }
+  .btn-solid:hover{ background:#ef6c42; }
+  .btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .hero{ padding:64px 0 46px; }
+  .hero h1{ font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; font-size:clamp(34px,5.4vw,60px); line-height:1.08; margin:0 0 24px; max-width:760px; }
+  .hero h1 span{ color:var(--accent-orange); }
+  .hero p.lede{ max-width:520px; font-size:17px; color:var(--text-muted); margin:0 0 36px; }
+  .hero-ctas{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:52px; }
+
+  .meter-panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px 30px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap; }
+  .meter-bars{ display:flex; align-items:flex-end; gap:6px; height:44px; }
+  .meter-bars .bar{ width:9px; background:var(--accent-olive); border-radius:1px; animation: flicker 3.2s ease-in-out infinite; }
+  .meter-bars .bar:nth-child(1){ height:14px; } .meter-bars .bar:nth-child(2){ height:22px; animation-delay:.3s;}
+  .meter-bars .bar:nth-child(3){ height:30px; animation-delay:.6s;} .meter-bars .bar:nth-child(4){ height:38px; animation-delay:.9s;}
+  .meter-bars .bar:nth-child(5){ height:44px; animation-delay:1.2s;}
+  @keyframes flicker{ 0%,55%{opacity:1;} 60%{opacity:.15;} 64%{opacity:.85;} 68%{opacity:.1;} 74%,100%{opacity:1;} }
+  .meter-label{ font-family:'Space Mono', monospace; font-size:12px; color:var(--text-muted); letter-spacing:0.08em; }
+  .meter-label .flash{ color:var(--accent-orange); }
+
+  .pillars-section, .rooms-section, .pricing-section{ padding:88px 0; border-top:1px solid var(--line-soft); }
+  .section-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:24px; margin-bottom:48px; flex-wrap:wrap; }
+  .section-head h2{ font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; font-size:clamp(24px,3.2vw,34px); margin:0; }
+  .section-head p{ color:var(--text-muted); max-width:380px; margin:0; font-size:15px; }
+
+  .pillars, .library-cards{ display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .pillar-card, .library-card{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:30px 26px; }
+  .pillar-num, .lc-tag{ font-family:'Space Mono', monospace; font-size:12px; color:var(--accent-orange); letter-spacing:0.1em; margin-bottom:16px; }
+  .pillar-card h3, .library-card h3{ font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:600; font-size:19px; margin:0 0 12px; }
+  .pillar-card p, .library-card p{ color:var(--text-muted); font-size:14px; margin:0; }
+
+  .room-list{ display:flex; flex-direction:column; }
+  .room-row{ display:grid; grid-template-columns:26px 1fr auto; align-items:center; gap:20px; padding:20px 0; border-top:1px solid var(--line-soft); }
+  .room-row:last-child{ border-bottom:1px solid var(--line-soft); }
+  .room-dot{ width:8px; height:8px; border-radius:50%; background:var(--accent-olive); }
+  .room-row h3{ margin:0 0 4px; font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:500; font-size:16px; }
+  .room-row p{ margin:0; color:var(--text-muted); font-size:14px; max-width:480px; }
+  .room-tag{ font-family:'Space Mono', monospace; font-size:11px; color:var(--text-muted); letter-spacing:0.06em; white-space:nowrap; }
+
+  .tier-ladder{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:20px; }
+  .tier-card{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px; position:relative; }
+  .tier-card.current{ border-color:var(--accent-orange); box-shadow:0 0 0 1px var(--accent-orange); }
+  .tier-card.sold_out{ opacity:0.55; }
+  .tier-card .tier-badge{ position:absolute; top:-11px; right:20px; background:var(--accent-orange); color:#14181A; font-family:'Space Mono', monospace; font-size:10px; letter-spacing:0.08em; padding:4px 9px; border-radius:2px; text-transform:uppercase; font-weight:700; }
+  .tier-card .tier-label{ font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.08em; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px; }
+  .tier-card .tier-price{ font-family:'Oswald', sans-serif; font-weight:600; font-size:36px; margin-bottom:6px; }
+  .tier-card .tier-price span{ font-family:'Space Mono', monospace; font-size:13px; color:var(--text-muted); font-weight:400; }
+  .tier-card .tier-status{ font-family:'Space Mono', monospace; font-size:12px; color:var(--text-muted); }
+  .tier-fill-track{ height:5px; background:var(--bg-panel-light); border-radius:3px; overflow:hidden; margin-top:14px; }
+  .tier-fill{ height:100%; background:var(--accent-orange); }
+
+  .join-panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:44px; margin-top:48px; }
+  .join-panel h2{ font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:600; font-size:27px; margin:0 0 12px; }
+  .join-panel > p{ color:var(--text-muted); margin:0 0 24px; font-size:15px; max-width:600px; }
+  .auth-form label{ display:block; font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); margin:14px 0 8px; }
+  .auth-form label:first-of-type{ margin-top:0; }
+  .auth-form input{ width:100%; max-width:420px; padding:13px 14px; background:var(--bg-deep); border:1px solid var(--line); border-radius:var(--radius); color:var(--text-paper); font-family:'Space Mono', monospace; font-size:14px; }
+  .auth-form input:focus{ border-color:var(--accent-orange); }
+  .form-error{ color:var(--accent-orange); font-family:'Space Mono', monospace; font-size:12px; margin:10px 0; min-height:14px; }
+  .mode-toggle{ display:flex; gap:8px; margin-bottom:24px; }
+  .mode-btn{ font-family:'Space Mono', monospace; font-size:12px; letter-spacing:0.03em; text-transform:uppercase; padding:9px 16px; border-radius:2px; border:1px solid var(--line); background:var(--bg-deep); color:var(--text-muted); }
+  .mode-btn.active{ border-color:var(--accent-orange); color:var(--accent-orange); }
+  .pay-options{ display:flex; gap:14px; flex-wrap:wrap; margin-top:18px; }
+  .pay-card{ flex:1; min-width:220px; background:var(--bg-deep); border:1px solid var(--line); border-radius:var(--radius); padding:22px; }
+  .pay-card h4{ margin:0 0 8px; font-family:'Oswald', sans-serif; text-transform:uppercase; font-size:15px; }
+  .pay-card p{ margin:0 0 16px; color:var(--text-muted); font-size:13px; }
+
+  footer{ padding:36px 0 60px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-family:'Space Mono', monospace; font-size:12px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+
+  /* ---- member area ---- */
+  .member-shell{ display:grid; grid-template-columns:250px 1fr; min-height:100vh; }
+  .sidebar{ background:var(--bg-panel); border-right:1px solid var(--line); padding:28px 22px; display:flex; flex-direction:column; }
+  .sidebar .logo{ font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; font-size:18px; margin-bottom:14px; }
+  .sidebar .logo span{ color:var(--accent-orange); }
+  .member-badge{ background:var(--bg-panel-light); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; margin-bottom:26px; }
+  .member-badge .mb-tier{ font-family:'Space Mono', monospace; font-size:11px; color:var(--text-muted); }
+  .side-section-label{ font-family:'Space Mono', monospace; font-size:10px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-muted); margin:18px 0 8px; }
+  .side-nav{ display:flex; flex-direction:column; gap:3px; }
+  .side-nav button{ text-align:left; background:none; border:none; color:var(--text-muted); font-family:'Space Mono', monospace; font-size:13px; padding:10px 11px; border-radius:var(--radius); }
+  .side-nav button:hover{ background:var(--bg-panel-light); color:var(--text-paper); }
+  .side-nav button.active{ background:var(--bg-panel-light); color:var(--accent-orange); }
+  .sidebar-spacer{ flex:1; }
+  .logout-btn{ font-family:'Space Mono', monospace; font-size:12px; color:var(--text-muted); background:none; border:1px solid var(--line); padding:10px; border-radius:var(--radius); }
+  .logout-btn:hover{ border-color:var(--accent-orange); color:var(--accent-orange); }
+
+  .member-main{ padding:44px 48px; max-width:860px; }
+  .member-main h1{ font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:600; font-size:28px; margin:0 0 6px; }
+  .member-sub{ color:var(--text-muted); margin:0 0 36px; font-size:15px; }
+  .panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px 28px; margin-bottom:20px; }
+  .panel h2{ font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:500; font-size:18px; margin:0 0 16px; }
+  .panel label{ display:block; font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted); margin:16px 0 8px; }
+  .panel label:first-of-type{ margin-top:0; }
+  .panel textarea, .panel input[type=text], .panel input[type=file]{ width:100%; padding:12px 14px; background:var(--bg-deep); border:1px solid var(--line); border-radius:var(--radius); color:var(--text-paper); font-family:'IBM Plex Sans', sans-serif; font-size:14px; resize:vertical; }
+  .panel textarea:focus, .panel input:focus{ border-color:var(--accent-orange); }
+  .save-row{ display:flex; align-items:center; gap:14px; margin-top:16px; flex-wrap:wrap; }
+  .save-msg{ font-family:'Space Mono', monospace; font-size:12px; color:var(--accent-olive); opacity:0; transition:opacity .3s; }
+  .save-msg.show{ opacity:1; }
+  .field-hint{ font-size:12px; color:var(--text-muted); margin:6px 0 0; }
+
+  .room-directory-row{ display:grid; grid-template-columns:1fr auto; align-items:center; gap:16px; padding:16px 0; border-top:1px solid var(--line-soft); cursor:pointer; }
+  .room-directory-row:first-child{ border-top:none; }
+  .room-directory-row:hover h3{ color:var(--accent-orange); }
+  .room-directory-row h3{ margin:0 0 4px; font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:500; font-size:15px; }
+  .room-directory-row p{ margin:0; color:var(--text-muted); font-size:13px; }
+  .rd-count{ font-family:'Space Mono', monospace; font-size:12px; color:var(--text-muted); white-space:nowrap; }
+
+  .post{ border-top:1px solid var(--line-soft); padding:18px 0; }
+  .post:first-child{ border-top:none; padding-top:0; }
+  .post .post-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; flex-wrap:wrap; gap:6px; }
+  .post h3{ margin:0; font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:500; font-size:16px; }
+  .post .post-meta{ font-family:'Space Mono', monospace; font-size:11px; color:var(--text-muted); }
+  .post p{ margin:0; color:var(--text-muted); font-size:14px; white-space:pre-wrap; }
+  .post-delete{ background:none; border:none; color:var(--text-muted); font-family:'Space Mono', monospace; font-size:11px; margin-top:8px; padding:0; }
+  .post-delete:hover{ color:var(--accent-orange); }
+  .empty-state{ color:var(--text-muted); font-size:14px; font-style:italic; }
+  .resource-link{ color:var(--accent-orange); text-decoration:none; border-bottom:1px solid rgba(226,87,43,.35); }
+  .filetype-tag{ font-family:'Space Mono', monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent-olive); border:1px solid var(--accent-olive); border-radius:2px; padding:2px 7px; margin-left:8px; }
+  .dl-btn{ background:none; border:1px solid var(--accent-olive); color:var(--accent-olive); font-family:'Space Mono', monospace; font-size:11px; text-transform:uppercase; padding:6px 12px; border-radius:2px; margin-top:8px; margin-right:8px; text-decoration:none; display:inline-block; }
+  .dl-btn:hover{ background:var(--accent-olive); color:#14181A; }
+  .loading-line{ font-family:'Space Mono', monospace; font-size:13px; color:var(--text-muted); padding:60px 0; text-align:center; }
+  .pending-banner{ background:var(--bg-panel-light); border:1px solid var(--accent-orange); border-radius:var(--radius); padding:20px 24px; margin-bottom:20px; }
+  .pending-banner p{ margin:0 0 12px; color:var(--text-muted); font-size:14px; }
+
+  @media (max-width:860px){
+    .pillars, .library-cards, .tier-ladder{ grid-template-columns:1fr; }
+    .member-shell{ grid-template-columns:1fr; }
+    .sidebar{ flex-direction:column; border-right:none; border-bottom:1px solid var(--line); }
+    .member-main{ padding:28px 22px; }
+  }
+  @media (max-width:600px){ .nav-links{ display:none; } }
+</style>
+</head>
+<body>
+
+<!-- =================== LANDING VIEW =================== -->
+<div id="landing-view">
+  <nav class="nav">
+    <div class="logo">BUILD THE <span>BACKUP</span></div>
+    <div class="nav-links">
+      <a href="#pillars">What it is</a>
+      <a href="#rooms">Rooms</a>
+      <a href="#library">Library</a>
+      <a href="#join">Membership</a>
+    </div>
+    <button class="btn" onclick="document.getElementById('join').scrollIntoView()">Member sign-in</button>
+  </nav>
+
+  <header class="hero wrap">
+    <p class="eyebrow">A private resilience community</p>
+    <h1>The internet is a <span>single point of failure.</span><br>Build the backup.</h1>
+    <p class="lede">Build The Backup is where people quietly prepare for the day the network doesn't come back up — offline resources, real privacy practice, and ways to talk to each other that don't touch a tower.</p>
+    <div class="hero-ctas">
+      <button class="btn btn-solid" onclick="document.getElementById('join').scrollIntoView()">Claim a founding spot</button>
+      <button class="btn" onclick="document.getElementById('rooms').scrollIntoView()">See the rooms</button>
+    </div>
+    <div class="meter-panel">
+      <div class="meter-bars"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+      <div class="meter-label">CONNECTION STATUS: <span class="flash">INTERMITTENT</span> — plan accordingly</div>
+    </div>
+  </header>
+
+  <section class="pillars-section wrap" id="pillars">
+    <div class="section-head">
+      <h2>Three ways to stay standing</h2>
+      <p>Not doomsday content — practical redundancy for the parts of life that quietly depend on a connection.</p>
+    </div>
+    <div class="pillars">
+      <div class="pillar-card"><div class="pillar-num mono">PILLAR I</div><h3>Offline Resources</h3><p>Mirrored wikis, maps, field manuals, and medical references — libraries that open with zero signal.</p></div>
+      <div class="pillar-card"><div class="pillar-num mono">PILLAR II</div><h3>Privacy &amp; OPSEC</h3><p>Shrinking your digital footprint before you need to — from metadata hygiene to what not to say on the record.</p></div>
+      <div class="pillar-card"><div class="pillar-num mono">PILLAR III</div><h3>Offline Communication</h3><p>Mesh networks, LoRa, HAM basics, and dead-simple ways to reach people when the towers go dark.</p></div>
+    </div>
+  </section>
+
+  <section class="rooms-section wrap" id="rooms">
+    <div class="section-head"><h2>Inside the member area</h2><p>Five discussion rooms, member-only, no algorithm deciding what you see.</p></div>
+    <div class="room-list">
+      <div class="room-row"><div class="room-dot"></div><div><h3>General</h3><p>Introductions, general talk, welcome to new members.</p></div><div class="room-tag mono">MEMBERS ONLY</div></div>
+      <div class="room-row"><div class="room-dot"></div><div><h3>Offline Communication</h3><p>Mesh networks, LoRa, HAM radio basics, signal without towers.</p></div><div class="room-tag mono">MEMBERS ONLY</div></div>
+      <div class="room-row"><div class="room-dot"></div><div><h3>Privacy &amp; OPSEC</h3><p>Locking down your digital footprint before you need to.</p></div><div class="room-tag mono">MEMBERS ONLY</div></div>
+      <div class="room-row"><div class="room-dot"></div><div><h3>Offline Resources</h3><p>Downloaded wikis, maps, manuals, and libraries that work with no signal.</p></div><div class="room-tag mono">MEMBERS ONLY</div></div>
+      <div class="room-row"><div class="room-dot"></div><div><h3>Skills &amp; Barter</h3><p>What you can do with your hands when the grid is down.</p></div><div class="room-tag mono">MEMBERS ONLY</div></div>
+    </div>
+  </section>
+
+  <section class="rooms-section wrap" id="library">
+    <div class="section-head"><h2>The resource library</h2><p>Built by the community, for the community — upload PDFs and guides directly, or link to bigger files.</p></div>
+    <div class="library-cards">
+      <div class="library-card"><div class="lc-tag mono">PDF BANK</div><h3>Manuals &amp; reference sheets</h3><p>Field guides, medical references, and checklists members have found worth keeping offline.</p></div>
+      <div class="library-card"><div class="lc-tag mono">WRITTEN GUIDES</div><h3>Long-form guides</h3><p>Step-by-step write-ups on setups, comparisons, and lessons learned the hard way.</p></div>
+      <div class="library-card"><div class="lc-tag mono">VIDEO LIBRARY</div><h3>Linked walkthroughs</h3><p>Video demonstrations members have vetted and pointed the room toward.</p></div>
+    </div>
+  </section>
+
+  <section class="pricing-section wrap" id="join">
+    <div class="section-head"><h2>Founding membership</h2><p>Price rises as the room fills, then holds. Whatever annual rate you join at is locked in for as long as you stay a member.</p></div>
+    <div class="tier-ladder" id="tier-ladder"><div class="loading-line">Checking current tier…</div></div>
+
+    <div class="join-panel">
+      <div class="mode-toggle">
+        <button type="button" class="mode-btn active" id="auth-mode-join" onclick="setAuthMode('join')">Create account</button>
+        <button type="button" class="mode-btn" id="auth-mode-login" onclick="setAuthMode('login')">Log in</button>
+      </div>
+      <button class="btn" style="width:100%; padding:11px; margin-bottom:24px;" onclick="previewJoin()">Just want to look around? Preview the member area (no backend needed) →</button>
+
+      <div id="auth-join-panel">
+        <h2>Reserve your spot.</h2>
+        <p>Create an account, then pay by card or crypto to activate your membership at today's rate.</p>
+        <div class="auth-form">
+          <label for="reg-name">Name</label>
+          <input type="text" id="reg-name" placeholder="e.g. Jordan Ellis">
+          <label for="reg-email">Email</label>
+          <input type="text" id="reg-email" placeholder="you@example.com">
+          <label for="reg-password">Password</label>
+          <input type="password" id="reg-password" placeholder="At least 8 characters">
+          <div class="form-error" id="reg-error"></div>
+          <button class="btn btn-solid" id="reg-submit-btn" onclick="handleRegister()">Continue to payment →</button>
+        </div>
+      </div>
+
+      <div id="auth-login-panel" class="hidden">
+        <h2>Welcome back.</h2>
+        <p>Log in to reach the member area, or to finish a payment you started earlier.</p>
+        <div class="auth-form">
+          <label for="login-email">Email</label>
+          <input type="text" id="login-email" placeholder="you@example.com">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password">
+          <div class="form-error" id="login-error"></div>
+          <button class="btn btn-solid" onclick="handleLogin()">Log in →</button>
+        </div>
+      </div>
+
+      <div id="pay-step" class="hidden">
+        <h2>Choose how to pay.</h2>
+        <p id="pay-step-copy"></p>
+        <div class="pay-options">
+          <div class="pay-card">
+            <h4>Card (Stripe)</h4>
+            <p>Billed annually, auto-renews each year at your locked-in rate. Cancel anytime from your Stripe receipt.</p>
+            <button class="btn btn-solid" style="width:100%;" onclick="startCheckout('stripe')">Pay with card →</button>
+          </div>
+          <div class="pay-card">
+            <h4>Crypto</h4>
+            <p>One-time annual payment via Coinbase Commerce. Does not auto-renew — you'll pay again manually next year.</p>
+            <button class="btn" style="width:100%;" onclick="startCheckout('crypto')">Pay with crypto →</button>
+          </div>
+        </div>
+        <div class="form-error" id="pay-error"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="wrap">
+    <span>BUILD THE BACKUP — offline resources, privacy, and communication</span>
+    <span>© 2026</span>
+  </footer>
+</div>
+
+<!-- =================== MEMBER VIEW =================== -->
+<div id="member-view" class="hidden">
+  <div class="member-shell">
+    <aside class="sidebar">
+      <div class="logo">BUILD THE <span>BACKUP</span></div>
+      <div class="member-badge"><div class="mb-tier mono" id="badge-tier">—</div></div>
+      <nav class="side-nav">
+        <button data-tab="home" class="active" onclick="switchTab('home')">Home</button>
+        <button data-tab="directory" onclick="switchTab('directory')">Member Directory</button>
+      </nav>
+      <div class="side-section-label">Rooms</div>
+      <nav class="side-nav" id="room-nav"></nav>
+      <div class="side-section-label">Library</div>
+      <nav class="side-nav" id="library-nav"></nav>
+      <div class="side-section-label">Private rooms</div>
+      <nav class="side-nav" id="privaterooms-nav"></nav>
+      <div class="side-nav" style="margin-bottom:4px;"><button data-tab="privaterooms-manage" onclick="switchTab('privaterooms-manage')">+ Join or create</button></div>
+      <div class="sidebar-spacer"></div>
+      <a href="admin.html" id="admin-panel-link" class="logout-btn hidden" style="text-decoration:none; display:block; text-align:center; margin-bottom:10px;">Admin panel →</a>
+      <div class="side-nav" style="margin-bottom:10px;"><button data-tab="profile" onclick="switchTab('profile')">Profile</button></div>
+      <button class="logout-btn" onclick="logOut()">Log out</button>
+    </aside>
+
+    <main class="member-main">
+      <div id="member-loading" class="loading-line">Opening the drop…</div>
+
+      <div id="tab-home" class="hidden">
+        <h1>Welcome back<span id="home-name"></span>.</h1>
+        <p class="member-sub" id="home-sub"></p>
+        <div class="panel hidden" id="billing-panel">
+          <h2>Membership &amp; billing</h2>
+          <p class="member-sub" id="billing-copy" style="margin-bottom:14px;"></p>
+          <div class="save-row" id="billing-actions"></div>
+        </div>
+        <div class="panel"><h2>Rooms</h2><div id="room-directory"></div></div>
+        <div class="panel"><h2>Resource library</h2><div id="library-directory"></div></div>
+        <div class="panel"><h2>Member directory</h2>
+          <div class="room-directory-row" onclick="switchTab('directory')">
+            <div><h3>Browse the directory</h3><p>See who's opted in to share skills, trades, or local contact.</p></div>
+            <div class="rd-count mono" id="home-directory-count">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-directory" class="hidden">
+        <h1>Member directory</h1>
+        <p class="member-sub">Members who've opted in, listed by what they can offer or what they're looking for. Nobody appears here unless they choose to.</p>
+        <div class="panel" id="directory-list"></div>
+      </div>
+
+      <div id="tab-room" class="hidden">
+        <h1 id="room-title">Room</h1>
+        <p class="member-sub" id="room-desc"></p>
+        <div class="panel post-form">
+          <label for="post-title">Post title</label>
+          <input type="text" id="post-title" placeholder="e.g. Best cheap LoRa setup for a small property">
+          <label for="post-body">Message</label>
+          <textarea id="post-body" rows="3" placeholder="Write your post…"></textarea>
+          <div class="save-row"><button class="btn btn-solid" onclick="addPost()">Post to room</button><span class="save-msg" id="post-save-msg">Posted</span></div>
+        </div>
+        <div class="panel" id="post-list"></div>
+      </div>
+
+      <div id="tab-library" class="hidden">
+        <h1 id="library-title">Library</h1>
+        <p class="member-sub" id="library-desc"></p>
+        <div class="panel post-form">
+          <div class="mode-toggle">
+            <button type="button" class="mode-btn active" id="mode-btn-file" onclick="setResourceMode('file')">Upload a file</button>
+            <button type="button" class="mode-btn" id="mode-btn-link" onclick="setResourceMode('link')">Add a link instead</button>
+          </div>
+          <label for="resource-title">Title</label>
+          <input type="text" id="resource-title" placeholder="e.g. USGS topo map reader (offline-capable)">
+          <label for="resource-desc">Short description</label>
+          <textarea id="resource-desc" rows="2" placeholder="What is it, and why is it worth downloading?"></textarea>
+          <div id="resource-file-fields">
+            <label for="resource-file">File</label>
+            <input type="file" id="resource-file">
+            <p class="field-hint">Up to 20MB per file. For anything bigger, use a link instead.</p>
+          </div>
+          <div id="resource-link-fields" class="hidden">
+            <label for="resource-url">Link</label>
+            <input type="text" id="resource-url" placeholder="https://…">
+          </div>
+          <div class="form-error" id="resource-error"></div>
+          <div class="save-row"><button class="btn btn-solid" onclick="addResource()">Add to library</button><span class="save-msg" id="resource-save-msg">Added</span></div>
+        </div>
+        <div class="panel" id="resource-list"></div>
+      </div>
+
+      <div id="tab-privaterooms-manage" class="hidden">
+        <h1>Private rooms</h1>
+        <p class="member-sub">Encrypted with a passphrase you set — content is unreadable to anyone without it, including us. Share the room code and passphrase with whoever belongs inside, out of band, the way you'd share a house key.</p>
+        <div class="panel">
+          <div class="mode-toggle">
+            <button type="button" class="mode-btn active" id="mode-btn-create" onclick="setRoomMode('create')">Create a room</button>
+            <button type="button" class="mode-btn" id="mode-btn-join" onclick="setRoomMode('join')">Join a room</button>
+          </div>
+          <div id="room-create-fields">
+            <label for="room-name">Room name</label>
+            <input type="text" id="room-name" placeholder="e.g. Ridge Road neighbors">
+            <label for="room-passphrase-new">Passphrase</label>
+            <input type="text" id="room-passphrase-new" placeholder="Something only your group knows">
+            <label for="room-passphrase-confirm">Confirm passphrase</label>
+            <input type="text" id="room-passphrase-confirm">
+          </div>
+          <div id="room-join-fields" class="hidden">
+            <label for="room-code-join">Room code</label>
+            <input type="text" id="room-code-join" placeholder="e.g. K3P9QZ">
+            <label for="room-passphrase-join">Passphrase</label>
+            <input type="text" id="room-passphrase-join">
+          </div>
+          <div class="form-error" id="room-error"></div>
+          <div class="save-row"><button class="btn btn-solid" id="room-submit-btn" onclick="handleRoomSubmit()">Create room</button></div>
+        </div>
+      </div>
+
+      <div id="tab-privateroom-view" class="hidden">
+        <h1 id="privateroom-title">Room</h1>
+        <p class="member-sub mono" id="privateroom-code-label"></p>
+        <div class="panel hidden" id="unlock-panel">
+          <label for="unlock-passphrase">Enter the passphrase to unlock this room</label>
+          <input type="text" id="unlock-passphrase">
+          <div class="form-error" id="unlock-error"></div>
+          <div class="save-row"><button class="btn btn-solid" onclick="unlockPrivateRoom()">Unlock</button></div>
+        </div>
+        <div id="privateroom-content" class="hidden">
+          <div class="panel post-form">
+            <label for="privatemsg-text">Message</label>
+            <textarea id="privatemsg-text" rows="3" placeholder="Write an encrypted message…"></textarea>
+            <div class="save-row">
+              <button class="btn btn-solid" onclick="sendPrivateMessage()">Send</button>
+              <span class="save-msg" id="privatemsg-save-msg">Sent</span>
+              <button class="logout-btn" style="margin-left:auto;" onclick="leavePrivateRoom()">Leave room</button>
+            </div>
+          </div>
+          <div class="panel" id="privateroom-messages"></div>
+        </div>
+      </div>
+
+      <div id="tab-profile" class="hidden">
+        <h1>Profile</h1>
+        <p class="member-sub">This is only visible to you unless noted otherwise below.</p>
+        <div class="panel">
+          <label for="profile-name">Name</label>
+          <input type="text" id="profile-name">
+          <label for="profile-bio">Notes to self</label>
+          <textarea id="profile-bio" rows="4"></textarea>
+          <div class="save-row"><button class="btn btn-solid" onclick="saveProfile()">Save changes</button><span class="save-msg" id="profile-save-msg">Saved</span></div>
+        </div>
+        <div class="panel">
+          <h2>Member directory listing</h2>
+          <p class="member-sub" style="margin:-6px 0 16px; font-size:13px;">Fully optional, off by default. If you opt in, only your chosen nickname and what you share below are shown — never your member number, tier, or real name unless you put it in the nickname field yourself.</p>
+          <label style="display:flex; align-items:center; gap:10px; cursor:pointer; text-transform:none; letter-spacing:0; font-family:'IBM Plex Sans', sans-serif; font-size:14px; color:var(--text-paper);">
+            <input type="checkbox" id="directory-optin" style="width:auto; accent-color:var(--accent-orange);" onchange="toggleDirectoryFields()">
+            List me in the member directory
+          </label>
+          <div id="directory-fields" class="hidden">
+            <label for="directory-nickname">Name or nickname to show</label>
+            <input type="text" id="directory-nickname" placeholder="e.g. Ridge Runner, or just a first name">
+            <label for="directory-skills">What you can offer or what you're looking for</label>
+            <input type="text" id="directory-skills" placeholder="e.g. Licensed HAM operator, happy to help with antenna setup">
+          </div>
+          <div class="form-error" id="directory-error"></div>
+          <div class="save-row"><button class="btn btn-solid" onclick="saveDirectorySettings()">Update listing</button><span class="save-msg" id="directory-save-msg">Saved</span></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// EDIT ME: point this at your deployed backend before going live.
+// Leave as-is for local dev (backend running on port 4000).
+// ============================================================
+const API_BASE = 'https://buildthebackup-production.up.railway.app';
+
+const ROOMS_META = {
+  general: 'General', comms: 'Offline Communication', privacy: 'Privacy & OPSEC',
+  resources: 'Offline Resources', skills: 'Skills & Barter'
+};
+const LIBRARY_META = {
+  pdfs: 'PDF Bank', guides: 'Written Guides', videos: 'Video Library'
+};
+
+// ---------------- offline preview mode ----------------
+// Lets you click through the whole member area with sample data and no backend running.
+// Nothing here ever touches window.storage/localStorage — it's plain in-memory JS state
+// that resets on reload, and it's completely separate from the real API calls below.
+let previewMode = false;
+let previewStore = null;
+
+async function api(path, options = {}) {
+  if (previewMode) return mockApi(path, options);
+  const res = await fetch(API_BASE + path, {
+    credentials: 'include',
+    headers: options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  let data = null;
+  try { data = await res.json(); } catch (e) { /* no body */ }
+  if (!res.ok) throw new Error((data && data.error) || `Request failed (${res.status})`);
+  return data;
+}
+
+function seedPreviewData() {
+  previewStore = {
+    me: {
+      id: 1, name: 'Preview Member', email: 'preview@example.com', bio: 'Testing out the member area before going live.',
+      directoryOptIn: true, directoryNickname: 'Ridge Runner', directorySkills: 'Ex-EMT, offers first-aid basics and trauma kit reviews.',
+      status: 'active', paymentMethod: 'stripe', autoRenew: true, tierPrice: 199, tierLabel: 'Tier 1 — First 1,000',
+      memberNumber: 214, createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 300 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    directory: [
+      { nickname: 'Ridge Runner', skills: 'Ex-EMT, offers first-aid basics and trauma kit reviews.' },
+      { nickname: 'Alvarez', skills: 'Licensed HAM operator (General class), happy to help with antenna setup.' },
+      { nickname: 'Sunny W.', skills: 'Runs a small solar install business, can talk off-grid power sizing.' },
+    ],
+    posts: {
+      general: [
+        { id: 2, title: 'Anyone doing a meetup this fall?', body: 'Curious if there is enough interest in a regional in-person meetup.', author: 'R. Alvarez', date: '2026-07-18', isMine: false, canDelete: false },
+        { id: 3, title: 'New here — East Tennessee', body: 'Been lurking a while. Mostly here for the comms and privacy stuff.', author: 'S. Whitfield', date: '2026-07-20', isMine: false, canDelete: false },
+      ],
+      comms: [
+        { id: 5, title: 'Cheap first HAM radio that is not garbage', body: 'Get a Baofeng if you must, but budget for a real antenna.', author: 'R. Alvarez', date: '2026-07-22', isMine: false, canDelete: false },
+      ],
+      privacy: [
+        { id: 6, title: 'Metadata scrub before you post photos', body: 'Strip EXIF before sharing anything with a location tag.', author: 'Preview Member', date: '2026-07-23', isMine: true, canDelete: true },
+      ],
+      resources: [],
+      skills: [
+        { id: 7, title: 'Trading solar sizing help for canning know-how', body: 'I can help size a small off-grid system. Looking to learn canning in return.', author: 'S. Whitfield', date: '2026-07-21', isMine: false, canDelete: false },
+      ],
+    },
+    library: {
+      pdfs: [
+        { id: 1, type: 'link', title: 'Basic wound care field reference', desc: 'Short, image-heavy reference for common field injuries.', url: 'https://example.com/wound-care.pdf', author: 'Preview Member', date: '2026-07-15', isMine: true, canDelete: true },
+      ],
+      guides: [
+        { id: 2, type: 'link', title: 'Setting up a two-node mesh network', desc: 'Step-by-step for a basic two-radio mesh link.', url: 'https://example.com/mesh-guide', author: 'R. Alvarez', date: '2026-07-12', isMine: false, canDelete: false },
+      ],
+      videos: [],
+    },
+    privateRooms: {},   // code -> { salt, nameIv, nameCiphertext, messages: [] }
+    myRoomCodes: [],
+    nextId: 1000,
+  };
+}
+
+function mockDelay(result) {
+  return new Promise(resolve => setTimeout(() => resolve(result), 120));
+}
+
+async function mockApi(path, options = {}) {
+  const method = (options.method || 'GET').toUpperCase();
+  const body = options.body instanceof FormData ? null : (options.body ? JSON.parse(options.body) : {});
+  const s = previewStore;
+
+  // ---- pricing ----
+  if (path === '/api/pricing') {
+    return mockDelay({
+      count: 214,
+      ladder: [
+        { label: 'Tier 1 — First 1,000', price: 199, cap: 1000, claimed: 214, status: 'current' },
+        { label: 'Tier 2 — Next 1,000', price: 249, cap: 1000, claimed: 0, status: 'upcoming' },
+        { label: 'Tier 3 — 2,001 and on', price: 299, cap: null, claimed: 0, status: 'upcoming' },
+      ],
+    });
+  }
+
+  // ---- auth ----
+  if (path === '/api/auth/me' && method === 'GET') return mockDelay({ member: s.me });
+  if (path === '/api/auth/me' && method === 'PUT') {
+    s.me.name = body.name || s.me.name;
+    s.me.bio = body.bio || '';
+    return mockDelay({ member: s.me });
+  }
+  if (path === '/api/auth/me/directory' && method === 'PUT') {
+    if (body.optIn && !body.nickname) throw new Error('Add a name or nickname to show before listing yourself.');
+    s.me.directoryOptIn = !!body.optIn;
+    s.me.directoryNickname = body.nickname || '';
+    s.me.directorySkills = body.skills || '';
+    s.directory = s.directory.filter(d => d.nickname !== 'Ridge Runner');
+    if (s.me.directoryOptIn) s.directory.unshift({ nickname: s.me.directoryNickname, skills: s.me.directorySkills });
+    return mockDelay({ member: s.me });
+  }
+  if (path === '/api/auth/logout') return mockDelay({ ok: true });
+
+  // ---- directory ----
+  if (path === '/api/directory') return mockDelay(s.directory);
+
+  // ---- forum ----
+  if (path === '/api/forum/rooms' && method === 'GET') {
+    return mockDelay(Object.entries(ROOMS_META).map(([id, name]) => ({
+      id, name, desc: '', postCount: (s.posts[id] || []).length,
+    })));
+  }
+  let m = path.match(/^\/api\/forum\/rooms\/([a-z]+)\/posts$/);
+  if (m && method === 'GET') return mockDelay([...s.posts[m[1]]].sort((a, b) => b.id - a.id));
+  if (m && method === 'POST') {
+    const post = { id: s.nextId++, title: body.title || 'Untitled post', body: body.body || '', author: s.me.name, date: new Date().toISOString(), isMine: true, canDelete: true };
+    s.posts[m[1]].push(post);
+    return mockDelay({ id: post.id });
+  }
+  m = path.match(/^\/api\/forum\/posts\/(\d+)$/);
+  if (m && method === 'DELETE') {
+    Object.keys(s.posts).forEach(room => { s.posts[room] = s.posts[room].filter(p => p.id !== Number(m[1])); });
+    return mockDelay({ ok: true });
+  }
+
+  // ---- library ----
+  if (path === '/api/library/categories' && method === 'GET') {
+    return mockDelay(Object.entries(LIBRARY_META).map(([id, name]) => ({
+      id, name, desc: '', itemCount: (s.library[id] || []).length,
+    })));
+  }
+  m = path.match(/^\/api\/library\/categories\/([a-z]+)\/items$/);
+  if (m && method === 'GET') return mockDelay([...s.library[m[1]]].sort((a, b) => b.id - a.id));
+  m = path.match(/^\/api\/library\/categories\/([a-z]+)\/link$/);
+  if (m && method === 'POST') {
+    const item = { id: s.nextId++, type: 'link', title: body.title, desc: body.desc || '', url: body.url, author: s.me.name, date: new Date().toISOString(), isMine: true, canDelete: true };
+    s.library[m[1]].push(item);
+    return mockDelay({ id: item.id });
+  }
+  m = path.match(/^\/api\/library\/categories\/([a-z]+)\/file$/);
+  if (m && method === 'POST') {
+    const file = options.body.get('file');
+    const item = {
+      id: s.nextId++, type: 'file',
+      title: options.body.get('title') || file.name,
+      desc: options.body.get('desc') || '',
+      fileName: file.name, fileSize: file.size,
+      blobUrl: URL.createObjectURL(file),
+      author: s.me.name, date: new Date().toISOString(), isMine: true, canDelete: true,
+    };
+    s.library[m[1]].push(item);
+    return mockDelay({ id: item.id });
+  }
+  m = path.match(/^\/api\/library\/items\/(\d+)$/);
+  if (m && method === 'DELETE') {
+    Object.keys(s.library).forEach(cat => { s.library[cat] = s.library[cat].filter(i => i.id !== Number(m[1])); });
+    return mockDelay({ ok: true });
+  }
+
+  // ---- private rooms ----
+  if (path === '/api/privaterooms/mine') {
+    return mockDelay(s.myRoomCodes.map(code => {
+      const r = s.privateRooms[code];
+      return { code, salt: r.salt, nameIv: r.nameIv, nameCiphertext: r.nameCiphertext };
+    }));
+  }
+  if (path === '/api/privaterooms/create' && method === 'POST') {
+    const code = 'DEMO' + Math.random().toString(36).slice(2, 4).toUpperCase();
+    s.privateRooms[code] = { salt: body.salt, nameIv: body.nameIv, nameCiphertext: body.nameCiphertext, messages: [] };
+    s.myRoomCodes.push(code);
+    return mockDelay({ code });
+  }
+  m = path.match(/^\/api\/privaterooms\/([A-Z0-9]+)\/meta$/);
+  if (m && method === 'GET') {
+    const r = s.privateRooms[m[1]];
+    if (!r) throw new Error('No room with that code.');
+    return mockDelay({ code: m[1], salt: r.salt, nameIv: r.nameIv, nameCiphertext: r.nameCiphertext });
+  }
+  m = path.match(/^\/api\/privaterooms\/([A-Z0-9]+)\/join$/);
+  if (m && method === 'POST') {
+    if (!s.myRoomCodes.includes(m[1])) s.myRoomCodes.push(m[1]);
+    return mockDelay({ ok: true });
+  }
+  m = path.match(/^\/api\/privaterooms\/([A-Z0-9]+)\/leave$/);
+  if (m && method === 'POST') {
+    s.myRoomCodes = s.myRoomCodes.filter(c => c !== m[1]);
+    return mockDelay({ ok: true });
+  }
+  m = path.match(/^\/api\/privaterooms\/([A-Z0-9]+)\/messages$/);
+  if (m && method === 'GET') {
+    return mockDelay([...s.privateRooms[m[1]].messages].sort((a, b) => b.id - a.id));
+  }
+  if (m && method === 'POST') {
+    const msg = { id: s.nextId++, iv: body.iv, ciphertext: body.ciphertext, author: s.me.name, date: new Date().toISOString(), isMine: true };
+    s.privateRooms[m[1]].messages.push(msg);
+    return mockDelay({ id: msg.id });
+  }
+  m = path.match(/^\/api\/privaterooms\/messages\/(\d+)$/);
+  if (m && method === 'DELETE') {
+    Object.values(s.privateRooms).forEach(r => { r.messages = r.messages.filter(msg => msg.id !== Number(m[1])); });
+    return mockDelay({ ok: true });
+  }
+
+  throw new Error('This action is not available in preview mode.');
+}
+
+async function previewJoin() {
+  previewMode = true;
+  seedPreviewData();
+  await enterMemberArea();
+}
+
+// ---------------- pricing (public) ----------------
+async function renderPricing() {
+  const ladder = document.getElementById('tier-ladder');
+  try {
+    const snap = await api('/api/pricing');
+    ladder.innerHTML = snap.ladder.map(t => `
+      <div class="tier-card ${t.status}">
+        ${t.status === 'current' ? '<div class="tier-badge">Current</div>' : ''}
+        <div class="tier-label mono">${t.label}</div>
+        <div class="tier-price">$${t.price}<span> / year</span></div>
+        <div class="tier-status mono">${t.status === 'sold_out' ? 'SOLD OUT' : t.cap ? `${t.claimed} / ${t.cap} claimed` : 'Open enrollment'}</div>
+        ${t.cap ? `<div class="tier-fill-track"><div class="tier-fill" style="width:${Math.round((t.claimed / t.cap) * 100)}%"></div></div>` : ''}
+      </div>`).join('');
+  } catch (e) {
+    ladder.innerHTML = `<p class="empty-state">Could not load pricing — is the backend running at ${API_BASE}?</p>`;
+  }
+}
+
+// ---------------- auth mode toggle ----------------
+let authMode = 'join';
+function setAuthMode(mode) {
+  authMode = mode;
+  document.getElementById('auth-mode-join').classList.toggle('active', mode === 'join');
+  document.getElementById('auth-mode-login').classList.toggle('active', mode === 'login');
+  document.getElementById('auth-join-panel').classList.toggle('hidden', mode !== 'join');
+  document.getElementById('auth-login-panel').classList.toggle('hidden', mode !== 'login');
+  document.getElementById('pay-step').classList.add('hidden');
+}
+
+let pendingMember = null;
+
+async function handleRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const errEl = document.getElementById('reg-error');
+  errEl.textContent = '';
+  try {
+    const { member } = await api('/api/auth/register', { method: 'POST', body: JSON.stringify({ name, email, password }) });
+    pendingMember = member;
+    if (member.status === 'active') { enterMemberArea(); return; }
+    showPayStep();
+  } catch (e) {
+    errEl.textContent = e.message;
+  }
+}
+
+async function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  try {
+    const { member } = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    pendingMember = member;
+    if (member.status === 'active') { enterMemberArea(); return; }
+    showPayStep();
+  } catch (e) {
+    errEl.textContent = e.message;
+  }
+}
+
+function showPayStep() {
+  document.getElementById('auth-join-panel').classList.add('hidden');
+  document.getElementById('auth-login-panel').classList.add('hidden');
+  document.getElementById('pay-step').classList.remove('hidden');
+  const isExpired = pendingMember.status === 'expired';
+  document.getElementById('pay-step-copy').textContent = isExpired
+    ? `Your membership lapsed, so your original locked-in rate no longer applies — rejoining now means paying today's current tier price.`
+    : `You're signed up as ${pendingMember.name}. One step left — pay to activate your membership.`;
+}
+
+async function startCheckout(provider) {
+  const errEl = document.getElementById('pay-error');
+  errEl.textContent = '';
+  try {
+    const path = provider === 'stripe' ? '/api/checkout/stripe' : '/api/checkout/crypto';
+    const { url } = await api(path, { method: 'POST' });
+    window.location.href = url;
+  } catch (e) {
+    errEl.textContent = e.message;
+  }
+}
+
+function logOut() {
+  if (previewMode) {
+    previewMode = false;
+    previewStore = null;
+    window.location.reload();
+    return;
+  }
+  api('/api/auth/logout', { method: 'POST' }).finally(() => window.location.reload());
+}
+
+// ---------------- boot: check session on load ----------------
+let me = null;
+async function boot() {
+  await renderPricing();
+  try {
+    const { member } = await api('/api/auth/me');
+    me = member;
+    if (member.status === 'active') { enterMemberArea(); return; }
+    pendingMember = member;
+    document.getElementById('join').scrollIntoView();
+    showPayStep();
+  } catch (e) {
+    // not logged in — show landing as normal
+  }
+}
+
+// ---------------- member area ----------------
+async function enterMemberArea() {
+  me = pendingMember || me;
+  document.getElementById('landing-view').classList.add('hidden');
+  document.getElementById('member-view').classList.remove('hidden');
+  document.getElementById('member-loading').classList.remove('hidden');
+
+  try {
+    const { member } = await api('/api/auth/me');
+    me = member;
+  } catch (e) { window.location.reload(); return; }
+
+  if (me.status !== 'active') {
+    // Membership lapsed between login and now (or preview data is stale) — bounce back to payment.
+    document.getElementById('member-view').classList.add('hidden');
+    document.getElementById('landing-view').classList.remove('hidden');
+    pendingMember = me;
+    document.getElementById('join').scrollIntoView();
+    showPayStep();
+    return;
+  }
+
+  const isAdminAccount = me.role === 'admin';
+  document.getElementById('admin-panel-link').classList.toggle('hidden', !isAdminAccount);
+  document.getElementById('badge-tier').textContent = isAdminAccount
+    ? 'ADMIN ACCOUNT'
+    : `${me.tierLabel} · $${me.tierPrice}/yr${previewMode ? ' · PREVIEW' : ''}`;
+  document.getElementById('home-name').textContent = ', ' + me.name.split(' ')[0];
+  document.getElementById('home-sub').textContent = isAdminAccount
+    ? 'Signed in with your admin account — this is the member area, exactly as members see it. Use "Admin panel" in the sidebar for member and library oversight.'
+    : `Member #${me.memberNumber} — joined ${new Date(me.createdAt).toLocaleDateString()}.`;
+  document.getElementById('profile-name').value = me.name;
+  document.getElementById('profile-bio').value = me.bio || '';
+  document.getElementById('directory-optin').checked = !!me.directoryOptIn;
+  document.getElementById('directory-nickname').value = me.directoryNickname || '';
+  document.getElementById('directory-skills').value = me.directorySkills || '';
+  toggleDirectoryFields();
+  renderBillingPanel();
+
+  buildRoomNav();
+  buildLibraryNav();
+  await buildPrivateRoomsNav();
+  await renderRoomDirectory();
+  await renderLibraryDirectory();
+  try {
+    const listed = await api('/api/directory');
+    document.getElementById('home-directory-count').textContent = listed.length + ' listed';
+  } catch (e) {}
+
+  document.getElementById('member-loading').classList.add('hidden');
+  switchTab('home');
+}
+
+const ALL_TABS = ['tab-home','tab-directory','tab-room','tab-library','tab-privaterooms-manage','tab-privateroom-view','tab-profile'];
+function hideAllTabs(){ ALL_TABS.forEach(id => document.getElementById(id).classList.add('hidden')); }
+
+function switchTab(tab) {
+  document.querySelectorAll('.side-nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  hideAllTabs();
+  document.getElementById('tab-' + tab).classList.remove('hidden');
+  if (tab === 'directory') renderDirectory();
+  if (tab === 'privaterooms-manage') resetRoomForm();
+}
+
+function escapeHTML(str){ const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+function escapeAttr(str){ return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function flashSaved(elId, ok, label){
+  const el = document.getElementById(elId);
+  el.textContent = ok ? label : 'Could not save — try again';
+  el.style.color = ok ? 'var(--accent-olive)' : 'var(--accent-orange)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+// ---------------- rooms ----------------
+function buildRoomNav(){
+  document.getElementById('room-nav').innerHTML = Object.entries(ROOMS_META)
+    .map(([id, name]) => `<button data-tab="room-${id}" onclick="openRoom('${id}')">${name}</button>`).join('');
+}
+async function renderRoomDirectory(){
+  const dir = document.getElementById('room-directory');
+  dir.innerHTML = '<p class="empty-state">Loading rooms…</p>';
+  try {
+    const rooms = await api('/api/forum/rooms');
+    dir.innerHTML = rooms.map(r => `
+      <div class="room-directory-row" onclick="openRoom('${r.id}')">
+        <div><h3>${r.name}</h3><p>${r.desc}</p></div>
+        <div class="rd-count mono">${r.postCount} post${r.postCount===1?'':'s'}</div>
+      </div>`).join('');
+  } catch (e) { dir.innerHTML = `<p class="empty-state">${e.message}</p>`; }
+}
+let currentRoom = null;
+async function openRoom(roomId){
+  currentRoom = roomId;
+  document.getElementById('room-title').textContent = ROOMS_META[roomId];
+  document.querySelectorAll('.side-nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === 'room-' + roomId));
+  hideAllTabs();
+  document.getElementById('tab-room').classList.remove('hidden');
+  await renderPosts();
+}
+async function renderPosts(){
+  const list = document.getElementById('post-list');
+  list.innerHTML = '<p class="empty-state">Loading…</p>';
+  try {
+    const posts = await api(`/api/forum/rooms/${currentRoom}/posts`);
+    if (!posts.length) { list.innerHTML = '<p class="empty-state">No posts yet. Be the first one in the room.</p>'; return; }
+    list.innerHTML = posts.map(p => `
+      <div class="post">
+        <div class="post-head"><h3>${escapeHTML(p.title)}</h3><span class="post-meta mono">${escapeHTML(p.author)} · ${new Date(p.date).toLocaleDateString()}</span></div>
+        <p>${escapeHTML(p.body)}</p>
+        ${p.canDelete ? `<button class="post-delete" onclick="deletePost(${p.id})">Delete</button>` : ''}
+      </div>`).join('');
+  } catch (e) { list.innerHTML = `<p class="empty-state">${e.message}</p>`; }
+}
+async function addPost(){
+  const titleEl = document.getElementById('post-title'), bodyEl = document.getElementById('post-body');
+  const title = titleEl.value.trim(), body = bodyEl.value.trim();
+  if (!title && !body) return;
+  try {
+    await api(`/api/forum/rooms/${currentRoom}/posts`, { method: 'POST', body: JSON.stringify({ title, body }) });
+    titleEl.value = ''; bodyEl.value = '';
+    await renderPosts();
+    flashSaved('post-save-msg', true, 'Posted');
+  } catch (e) { flashSaved('post-save-msg', false); }
+}
+async function deletePost(id){
+  try { await api(`/api/forum/posts/${id}`, { method: 'DELETE' }); await renderPosts(); } catch (e) {}
+}
+
+// ---------------- library ----------------
+function buildLibraryNav(){
+  document.getElementById('library-nav').innerHTML = Object.entries(LIBRARY_META)
+    .map(([id, name]) => `<button data-tab="lib-${id}" onclick="openLibrary('${id}')">${name}</button>`).join('');
+}
+async function renderLibraryDirectory(){
+  const dir = document.getElementById('library-directory');
+  dir.innerHTML = '<p class="empty-state">Loading library…</p>';
+  try {
+    const cats = await api('/api/library/categories');
+    dir.innerHTML = cats.map(c => `
+      <div class="room-directory-row" onclick="openLibrary('${c.id}')">
+        <div><h3>${c.name}</h3><p>${c.desc}</p></div>
+        <div class="rd-count mono">${c.itemCount} item${c.itemCount===1?'':'s'}</div>
+      </div>`).join('');
+  } catch (e) { dir.innerHTML = `<p class="empty-state">${e.message}</p>`; }
+}
+let currentLibrary = null;
+let resourceMode = 'file';
+function setResourceMode(mode){
+  resourceMode = mode;
+  document.getElementById('mode-btn-file').classList.toggle('active', mode === 'file');
+  document.getElementById('mode-btn-link').classList.toggle('active', mode === 'link');
+  document.getElementById('resource-file-fields').classList.toggle('hidden', mode !== 'file');
+  document.getElementById('resource-link-fields').classList.toggle('hidden', mode !== 'link');
+  document.getElementById('resource-error').textContent = '';
+}
+async function openLibrary(catId){
+  currentLibrary = catId;
+  document.getElementById('library-title').textContent = LIBRARY_META[catId];
+  document.querySelectorAll('.side-nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === 'lib-' + catId));
+  hideAllTabs();
+  document.getElementById('tab-library').classList.remove('hidden');
+  await renderResources();
+}
+function formatBytes(bytes){
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(0) + ' KB';
+  return (bytes/(1024*1024)).toFixed(1) + ' MB';
+}
+async function renderResources(){
+  const list = document.getElementById('resource-list');
+  list.innerHTML = '<p class="empty-state">Loading…</p>';
+  try {
+    const items = await api(`/api/library/categories/${currentLibrary}/items`);
+    if (!items.length) { list.innerHTML = '<p class="empty-state">Nothing here yet. Add the first file or link.</p>'; return; }
+    const catTag = LIBRARY_META[currentLibrary].split(' ')[0].toUpperCase();
+    list.innerHTML = items.map(item => {
+      const titleHtml = item.type === 'file' ? escapeHTML(item.title)
+        : `<a class="resource-link" href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(item.title)}</a>`;
+      const downloadHref = previewMode ? item.blobUrl : `${API_BASE}/api/library/items/${item.id}/download`;
+      const actionHtml = item.type === 'file'
+        ? `<a class="dl-btn" href="${downloadHref}" download="${escapeAttr(item.fileName || item.title)}">Download${item.fileSize ? ' (' + formatBytes(item.fileSize) + ')' : ''}</a>` : '';
+      const deleteHtml = item.canDelete ? `<button class="post-delete" onclick="deleteResource(${item.id})">Delete</button>` : '';
+      return `
+        <div class="post">
+          <div class="post-head"><h3>${titleHtml}<span class="filetype-tag">${catTag}</span></h3><span class="post-meta mono">${escapeHTML(item.author)} · ${new Date(item.date).toLocaleDateString()}</span></div>
+          <p>${escapeHTML(item.desc)}</p>
+          ${actionHtml}${deleteHtml}
+        </div>`;
+    }).join('');
+  } catch (e) { list.innerHTML = `<p class="empty-state">${e.message}</p>`; }
+}
+async function addResource(){
+  const titleEl = document.getElementById('resource-title'), descEl = document.getElementById('resource-desc');
+  const urlEl = document.getElementById('resource-url'), fileEl = document.getElementById('resource-file');
+  const errEl = document.getElementById('resource-error');
+  const title = titleEl.value.trim(), desc = descEl.value.trim();
+  if (!title) { errEl.textContent = 'A title is required.'; return; }
+  errEl.textContent = '';
+  try {
+    if (resourceMode === 'file') {
+      const file = fileEl.files[0];
+      if (!file) { errEl.textContent = 'Choose a file to upload, or switch to "Add a link instead".'; return; }
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', title);
+      formData.append('desc', desc);
+      await api(`/api/library/categories/${currentLibrary}/file`, { method: 'POST', body: formData });
+    } else {
+      const url = urlEl.value.trim();
+      if (!url) { errEl.textContent = 'A link is required.'; return; }
+      await api(`/api/library/categories/${currentLibrary}/link`, { method: 'POST', body: JSON.stringify({ title, desc, url }) });
+    }
+    titleEl.value = ''; descEl.value = ''; urlEl.value = ''; fileEl.value = '';
+    await renderResources();
+    await renderLibraryDirectory();
+    flashSaved('resource-save-msg', true, 'Added');
+  } catch (e) { errEl.textContent = e.message; }
+}
+async function deleteResource(id){
+  try { await api(`/api/library/items/${id}`, { method: 'DELETE' }); await renderResources(); await renderLibraryDirectory(); } catch (e) {}
+}
+
+// ---------------- member directory ----------------
+function toggleDirectoryFields(){
+  const optIn = document.getElementById('directory-optin').checked;
+  document.getElementById('directory-fields').classList.toggle('hidden', !optIn);
+  document.getElementById('directory-error').textContent = '';
+}
+async function saveDirectorySettings(){
+  const optIn = document.getElementById('directory-optin').checked;
+  const nickname = document.getElementById('directory-nickname').value.trim();
+  const skills = document.getElementById('directory-skills').value.trim();
+  const errEl = document.getElementById('directory-error');
+  if (optIn && !nickname) { errEl.textContent = 'Add a name or nickname to show before listing yourself.'; return; }
+  errEl.textContent = '';
+  try {
+    const { member } = await api('/api/auth/me/directory', { method: 'PUT', body: JSON.stringify({ optIn, nickname, skills }) });
+    me = member;
+    const listed = await api('/api/directory');
+    document.getElementById('home-directory-count').textContent = listed.length + ' listed';
+    flashSaved('directory-save-msg', true, 'Updated');
+  } catch (e) { errEl.textContent = e.message; }
+}
+async function renderDirectory(){
+  const list = document.getElementById('directory-list');
+  list.innerHTML = '<p class="empty-state">Loading directory…</p>';
+  try {
+    const listed = await api('/api/directory');
+    if (!listed.length) { list.innerHTML = '<p class="empty-state">No one has opted into the directory yet. Add yourself from the Profile tab.</p>'; return; }
+    list.innerHTML = listed.map(m => `
+      <div class="room-directory-row" style="cursor:default;">
+        <div><h3>${escapeHTML(m.nickname)}</h3><p>${escapeHTML(m.skills || 'No details added yet.')}</p></div>
+      </div>`).join('');
+  } catch (e) { list.innerHTML = `<p class="empty-state">${e.message}</p>`; }
+}
+
+// ---------------- profile ----------------
+async function saveProfile(){
+  const name = document.getElementById('profile-name').value.trim();
+  const bio = document.getElementById('profile-bio').value.trim();
+  try {
+    const { member } = await api('/api/auth/me', { method: 'PUT', body: JSON.stringify({ name, bio }) });
+    me = member;
+    document.getElementById('home-name').textContent = ', ' + me.name.split(' ')[0];
+    flashSaved('profile-save-msg', true, 'Saved');
+  } catch (e) { flashSaved('profile-save-msg', false); }
+}
+
+// ---------------- billing panel ----------------
+function renderBillingPanel(){
+  const panel = document.getElementById('billing-panel');
+  const copyEl = document.getElementById('billing-copy');
+  const actionsEl = document.getElementById('billing-actions');
+  panel.classList.remove('hidden');
+
+  const expires = me.expiresAt ? new Date(me.expiresAt) : null;
+  const daysLeft = expires ? Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24)) : null;
+  const withinRenewalWindow = daysLeft !== null && daysLeft <= 30;
+
+  let copy = '';
+  let actions = '';
+
+  if (me.paymentMethod === 'stripe' && me.autoRenew) {
+    copy = expires
+      ? `Card on file, auto-renews ${expires.toLocaleDateString()} at your locked-in rate of $${me.tierPrice}/yr.`
+      : `Card on file, auto-renews yearly at $${me.tierPrice}/yr.`;
+    actions = `<button class="btn" onclick="manageBilling()">Manage billing / cancel →</button>`;
+  } else if (me.paymentMethod === 'stripe' && !me.autoRenew) {
+    copy = `Your subscription was cancelled. You still have access through ${expires ? expires.toLocaleDateString() : 'your paid-through date'} — after that you'll need to rejoin at the current tier.`;
+    actions = withinRenewalWindow ? `<button class="btn btn-solid" onclick="renewNow('stripe')">Resubscribe at $${me.tierPrice}/yr →</button>` : '';
+  } else if (me.paymentMethod === 'crypto') {
+    copy = expires
+      ? `Crypto memberships don't auto-renew. Yours is paid through ${expires.toLocaleDateString()}${withinRenewalWindow ? ' — you can renew early below.' : '.'}`
+      : `Crypto memberships don't auto-renew — you'll need to pay again each year.`;
+    actions = withinRenewalWindow
+      ? `<button class="btn btn-solid" onclick="renewNow('crypto')">Renew now at $${me.tierPrice}/yr →</button>`
+      : '';
+  } else {
+    panel.classList.add('hidden');
+    return;
+  }
+
+  copyEl.textContent = copy;
+  actionsEl.innerHTML = actions || '<span class="empty-state">Nothing to do here yet — check back closer to your renewal date.</span>';
+}
+
+async function manageBilling(){
+  if (previewMode) { alert('Billing management opens the Stripe hosted portal — not available in preview mode.'); return; }
+  try {
+    const { url } = await api('/api/billing/portal', { method: 'POST' });
+    window.location.href = url;
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+async function renewNow(provider){
+  if (previewMode) { alert('Renewal checkout is not available in preview mode.'); return; }
+  try {
+    const path = provider === 'stripe' ? '/api/checkout/stripe' : '/api/checkout/crypto';
+    const { url } = await api(path, { method: 'POST' });
+    window.location.href = url;
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
+// ---------------- private encrypted rooms ----------------
+let roomMode = 'create';
+let unlockedRooms = {};
+let currentPrivateRoomCode = null;
+
+function bufToB64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+function b64ToBuf(b64){ const bin = atob(b64); const bytes = new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i); return bytes.buffer; }
+async function deriveRoomKey(passphrase, saltB64){
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({ name:'PBKDF2', salt:b64ToBuf(saltB64), iterations:100000, hash:'SHA-256' }, keyMaterial, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']);
+}
+async function encryptWithKey(key, obj){
+  const encoder = new TextEncoder();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ciphertext = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, encoder.encode(JSON.stringify(obj)));
+  return { iv: bufToB64(iv), ciphertext: bufToB64(ciphertext) };
+}
+async function decryptWithKey(key, ivB64, ciphertextB64){
+  const decoder = new TextDecoder();
+  const plainBuf = await crypto.subtle.decrypt({ name:'AES-GCM', iv:b64ToBuf(ivB64) }, key, b64ToBuf(ciphertextB64));
+  return JSON.parse(decoder.decode(plainBuf));
+}
+
+function setRoomMode(mode){
+  roomMode = mode;
+  document.getElementById('mode-btn-create').classList.toggle('active', mode === 'create');
+  document.getElementById('mode-btn-join').classList.toggle('active', mode === 'join');
+  document.getElementById('room-create-fields').classList.toggle('hidden', mode !== 'create');
+  document.getElementById('room-join-fields').classList.toggle('hidden', mode !== 'join');
+  document.getElementById('room-submit-btn').textContent = mode === 'create' ? 'Create room' : 'Join room';
+  document.getElementById('room-error').textContent = '';
+}
+function resetRoomForm(){
+  ['room-name','room-passphrase-new','room-passphrase-confirm','room-code-join','room-passphrase-join'].forEach(id => { const el = document.getElementById(id); if (el) el.value=''; });
+  document.getElementById('room-error').textContent = '';
+  setRoomMode('create');
+}
+function handleRoomSubmit(){ roomMode === 'create' ? createPrivateRoom() : joinPrivateRoom(); }
+
+async function buildPrivateRoomsNav(){
+  const nav = document.getElementById('privaterooms-nav');
+  try {
+    const rooms = await api('/api/privaterooms/mine');
+    if (!rooms.length) { nav.innerHTML = '<p class="empty-state" style="padding:0 11px;">None yet.</p>'; return; }
+    const withNames = await Promise.all(rooms.map(async r => {
+      let name = r.code;
+      if (unlockedRooms[r.code]) {
+        try { const env = await decryptWithKey(unlockedRooms[r.code], r.nameIv, r.nameCiphertext); name = env.name; } catch (e) {}
+      }
+      return { code: r.code, name };
+    }));
+    nav.innerHTML = withNames.map(r => `<button data-tab="privateroom-${r.code}" onclick="openPrivateRoomByCode('${r.code}')">${escapeHTML(r.name)}</button>`).join('');
+  } catch (e) { nav.innerHTML = '<p class="empty-state" style="padding:0 11px;">Could not load.</p>'; }
+}
+
+async function createPrivateRoom(){
+  const name = document.getElementById('room-name').value.trim();
+  const pass = document.getElementById('room-passphrase-new').value;
+  const confirm = document.getElementById('room-passphrase-confirm').value;
+  const errEl = document.getElementById('room-error');
+  if (!name){ errEl.textContent = 'Give the room a name.'; return; }
+  if (pass.length < 6){ errEl.textContent = 'Passphrase should be at least 6 characters.'; return; }
+  if (pass !== confirm){ errEl.textContent = "Passphrases don't match."; return; }
+  errEl.textContent = '';
+
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const saltB64 = bufToB64(salt);
+  const key = await deriveRoomKey(pass, saltB64);
+  const envelope = await encryptWithKey(key, { name });
+
+  try {
+    const { code } = await api('/api/privaterooms/create', { method: 'POST', body: JSON.stringify({ salt: saltB64, nameIv: envelope.iv, nameCiphertext: envelope.ciphertext }) });
+    unlockedRooms[code] = key;
+    await buildPrivateRoomsNav();
+    openPrivateRoom(code, name);
+  } catch (e) { errEl.textContent = e.message; }
+}
+
+async function joinPrivateRoom(){
+  const code = document.getElementById('room-code-join').value.trim().toUpperCase();
+  const pass = document.getElementById('room-passphrase-join').value;
+  const errEl = document.getElementById('room-error');
+  if (!code || !pass){ errEl.textContent = 'A room code and passphrase are both required.'; return; }
+  errEl.textContent = '';
+
+  try {
+    const meta = await api(`/api/privaterooms/${code}/meta`);
+    const key = await deriveRoomKey(pass, meta.salt);
+    let envelope;
+    try { envelope = await decryptWithKey(key, meta.nameIv, meta.nameCiphertext); }
+    catch (e) { errEl.textContent = 'Wrong passphrase for that room.'; return; }
+
+    await api(`/api/privaterooms/${code}/join`, { method: 'POST' });
+    unlockedRooms[code] = key;
+    await buildPrivateRoomsNav();
+    openPrivateRoom(code, envelope.name);
+  } catch (e) { errEl.textContent = e.message; }
+}
+
+function openPrivateRoom(code, name){
+  currentPrivateRoomCode = code;
+  document.getElementById('privateroom-title').textContent = name;
+  document.getElementById('privateroom-code-label').textContent = 'ROOM CODE: ' + code;
+  document.querySelectorAll('.side-nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === 'privateroom-' + code));
+  hideAllTabs();
+  document.getElementById('tab-privateroom-view').classList.remove('hidden');
+  document.getElementById('unlock-error').textContent = '';
+  document.getElementById('unlock-passphrase').value = '';
+  if (unlockedRooms[code]) {
+    document.getElementById('unlock-panel').classList.add('hidden');
+    document.getElementById('privateroom-content').classList.remove('hidden');
+    renderPrivateMessages();
+  } else {
+    document.getElementById('unlock-panel').classList.remove('hidden');
+    document.getElementById('privateroom-content').classList.add('hidden');
+  }
+}
+async function openPrivateRoomByCode(code){
+  let name = code;
+  if (unlockedRooms[code]) {
+    try {
+      const meta = await api(`/api/privaterooms/${code}/meta`);
+      const env = await decryptWithKey(unlockedRooms[code], meta.nameIv, meta.nameCiphertext);
+      name = env.name;
+    } catch (e) {}
+  }
+  openPrivateRoom(code, name);
+}
+async function unlockPrivateRoom(){
+  const pass = document.getElementById('unlock-passphrase').value;
+  const errEl = document.getElementById('unlock-error');
+  const code = currentPrivateRoomCode;
+  try {
+    const meta = await api(`/api/privaterooms/${code}/meta`);
+    const key = await deriveRoomKey(pass, meta.salt);
+    let env;
+    try { env = await decryptWithKey(key, meta.nameIv, meta.nameCiphertext); }
+    catch (e) { errEl.textContent = 'Wrong passphrase.'; return; }
+    unlockedRooms[code] = key;
+    document.getElementById('privateroom-title').textContent = env.name;
+    document.getElementById('unlock-panel').classList.add('hidden');
+    document.getElementById('privateroom-content').classList.remove('hidden');
+    await renderPrivateMessages();
+    buildPrivateRoomsNav();
+  } catch (e) { errEl.textContent = e.message; }
+}
+async function renderPrivateMessages(){
+  const list = document.getElementById('privateroom-messages');
+  list.innerHTML = '<p class="empty-state">Decrypting…</p>';
+  const code = currentPrivateRoomCode;
+  const key = unlockedRooms[code];
+  try {
+    const messages = await api(`/api/privaterooms/${code}/messages`);
+    if (!messages.length) { list.innerHTML = '<p class="empty-state">No messages yet. Encrypted end to end — only people with the passphrase can read them.</p>'; return; }
+    const rendered = await Promise.all(messages.map(async m => {
+      let text;
+      try { const decoded = await decryptWithKey(key, m.iv, m.ciphertext); text = decoded.text; }
+      catch (e) { text = '[Could not decrypt this message]'; }
+      return `
+        <div class="post">
+          <div class="post-head"><h3>${escapeHTML(m.author)}</h3><span class="post-meta mono">${new Date(m.date).toLocaleDateString()}</span></div>
+          <p>${escapeHTML(text)}</p>
+          ${m.isMine ? `<button class="post-delete" onclick="deletePrivateMessage(${m.id})">Delete</button>` : ''}
+        </div>`;
+    }));
+    list.innerHTML = rendered.join('');
+  } catch (e) { list.innerHTML = `<p class="empty-state">${e.message}</p>`; }
+}
+async function sendPrivateMessage(){
+  const textEl = document.getElementById('privatemsg-text');
+  const text = textEl.value.trim();
+  if (!text) return;
+  const code = currentPrivateRoomCode;
+  const key = unlockedRooms[code];
+  const envelope = await encryptWithKey(key, { text });
+  try {
+    await api(`/api/privaterooms/${code}/messages`, { method: 'POST', body: JSON.stringify({ iv: envelope.iv, ciphertext: envelope.ciphertext }) });
+    textEl.value = '';
+    await renderPrivateMessages();
+    flashSaved('privatemsg-save-msg', true, 'Sent');
+  } catch (e) { flashSaved('privatemsg-save-msg', false); }
+}
+async function deletePrivateMessage(id){
+  try { await api(`/api/privaterooms/messages/${id}`, { method: 'DELETE' }); await renderPrivateMessages(); } catch (e) {}
+}
+async function leavePrivateRoom(){
+  const code = currentPrivateRoomCode;
+  try { await api(`/api/privaterooms/${code}/leave`, { method: 'POST' }); } catch (e) {}
+  delete unlockedRooms[code];
+  await buildPrivateRoomsNav();
+  switchTab('home');
+}
+
+boot();
+</script>
+</body>
+</html>

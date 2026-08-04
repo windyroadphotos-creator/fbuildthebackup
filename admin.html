@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Build The Backup — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#14181A; --bg-panel:#1C2320; --bg-panel-light:#252E29;
+    --accent-olive:#8A9A5B; --accent-orange:#E2572B; --accent-red:#C1502E;
+    --text-paper:#EDEAE2; --text-muted:#93A08D; --line:rgba(237,234,226,0.13); --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg-deep); color:var(--text-paper); font-family:'IBM Plex Sans', sans-serif; }
+  .mono{ font-family:'Space Mono', monospace; }
+  button, input{ font-family:inherit; }
+  .hidden{ display:none !important; }
+  a{ color:inherit; }
+
+  /* ---- login screen ---- */
+  #login-screen{ min-height:100vh; display:flex; align-items:center; justify-content:center; }
+  .login-card{ width:100%; max-width:400px; background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:40px; }
+  .login-card .tag{ font-family:'Space Mono', monospace; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--accent-orange); margin-bottom:14px; }
+  .login-card h1{ font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; font-size:24px; margin:0 0 26px; }
+  .login-card label{ display:block; font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted); margin:14px 0 8px; }
+  .login-card label:first-of-type{ margin-top:0; }
+  .login-card input{ width:100%; padding:12px 14px; background:var(--bg-deep); border:1px solid var(--line); border-radius:var(--radius); color:var(--text-paper); font-size:14px; }
+  .login-card input:focus{ outline:none; border-color:var(--accent-orange); }
+  .btn{ font-family:'Space Mono', monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; padding:12px 20px; border-radius:var(--radius); border:1px solid var(--accent-orange); background:var(--accent-orange); color:#14181A; font-weight:700; cursor:pointer; width:100%; margin-top:20px; }
+  .btn:hover{ background:#ef6c42; }
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--text-muted); font-weight:400; }
+  .btn-ghost:hover{ border-color:var(--accent-orange); color:var(--accent-orange); }
+  .btn-small{ width:auto; padding:8px 14px; font-size:11px; margin-top:0; }
+  .form-error{ color:var(--accent-red); font-family:'Space Mono', monospace; font-size:12px; margin-top:12px; min-height:14px; }
+
+  /* ---- dashboard ---- */
+  #dashboard{ max-width:1100px; margin:0 auto; padding:40px 28px 80px; }
+  .top-bar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:40px; }
+  .top-bar .logo{ font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; font-size:19px; }
+  .top-bar .logo span{ color:var(--accent-orange); }
+  .top-bar .who{ font-family:'Space Mono', monospace; font-size:12px; color:var(--text-muted); }
+
+  h2.section-title{ font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; font-size:20px; margin:0 0 6px; }
+  p.section-sub{ color:var(--text-muted); font-size:13.5px; margin:0 0 20px; max-width:640px; }
+
+  .panel{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px 28px; margin-bottom:28px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th{ text-align:left; font-family:'Space Mono', monospace; font-size:10.5px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted); padding:0 12px 10px 0; border-bottom:1px solid var(--line); }
+  td{ padding:12px 12px 12px 0; border-bottom:1px solid rgba(237,234,226,0.06); vertical-align:middle; }
+  tr:last-child td{ border-bottom:none; }
+  .badge{ display:inline-block; font-family:'Space Mono', monospace; font-size:10px; letter-spacing:0.05em; text-transform:uppercase; padding:3px 8px; border-radius:2px; border:1px solid var(--line); color:var(--text-muted); }
+  .badge.active{ border-color:var(--accent-olive); color:var(--accent-olive); }
+  .badge.pending{ border-color:var(--text-muted); color:var(--text-muted); }
+  .badge.expired{ border-color:var(--accent-red); color:var(--accent-red); }
+  .badge.admin{ border-color:var(--accent-orange); color:var(--accent-orange); }
+  .badge.blocked{ border-color:var(--accent-red); color:var(--accent-red); }
+
+  .upload-panel label{ display:block; font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted); margin:14px 0 8px; }
+  .upload-panel label:first-of-type{ margin-top:0; }
+  .upload-panel input[type=text], .upload-panel textarea, .upload-panel select, .upload-panel input[type=file]{ width:100%; padding:11px 13px; background:var(--bg-deep); border:1px solid var(--line); border-radius:var(--radius); color:var(--text-paper); font-size:13.5px; }
+  .mode-toggle{ display:flex; gap:8px; margin-bottom:18px; }
+  .mode-btn{ font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.03em; text-transform:uppercase; padding:8px 14px; border-radius:2px; border:1px solid var(--line); background:var(--bg-deep); color:var(--text-muted); cursor:pointer; }
+  .mode-btn.active{ border-color:var(--accent-orange); color:var(--accent-orange); }
+  .save-msg{ font-family:'Space Mono', monospace; font-size:12px; color:var(--accent-olive); margin-left:14px; opacity:0; transition:opacity .3s; }
+  .save-msg.show{ opacity:1; }
+
+  .cat-tabs{ display:flex; gap:8px; margin-bottom:20px; }
+  .cat-tab{ font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.04em; text-transform:uppercase; padding:9px 16px; border-radius:2px; border:1px solid var(--line); background:var(--bg-deep); color:var(--text-muted); cursor:pointer; }
+  .cat-tab.active{ border-color:var(--accent-orange); color:var(--accent-orange); }
+
+  .resource-link{ color:var(--accent-orange); text-decoration:none; }
+  .del-link{ color:var(--accent-red); font-family:'Space Mono', monospace; font-size:11px; text-transform:uppercase; background:none; border:none; cursor:pointer; padding:0; }
+  .empty-state{ color:var(--text-muted); font-size:13px; font-style:italic; }
+  .loading-line{ font-family:'Space Mono', monospace; font-size:13px; color:var(--text-muted); padding:20px 0; }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="tag">Staff access</div>
+    <h1>Admin sign-in</h1>
+    <label for="admin-email">Email</label>
+    <input type="text" id="admin-email" autocomplete="username">
+    <label for="admin-password">Password</label>
+    <input type="password" id="admin-password" autocomplete="current-password">
+    <div class="form-error" id="login-error"></div>
+    <button class="btn" onclick="handleAdminLogin()">Log in →</button>
+  </div>
+</div>
+
+<!-- ============ DASHBOARD ============ -->
+<div id="dashboard" class="hidden">
+  <div class="top-bar">
+    <div class="logo">BUILD THE <span>BACKUP</span> <span class="mono" style="font-size:12px; color:var(--text-muted); text-transform:none;">/ admin</span></div>
+    <div>
+      <span class="who" id="who-line"></span>
+      <a class="btn btn-ghost btn-small" style="margin-left:16px; text-decoration:none; display:inline-block;" href="index.html">View member area →</a>
+      <button class="btn btn-ghost btn-small" style="margin-left:8px;" onclick="adminLogout()">Log out</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2 class="section-title">Members</h2>
+    <p class="section-sub">Pausing uploads stops a member from adding new files or links to the library — it does not affect their forum access, private rooms, or membership status. Use it the moment you suspect a malicious upload; investigate after.</p>
+    <div id="members-table"><div class="loading-line">Loading members…</div></div>
+  </div>
+
+  <div class="panel">
+    <h2 class="section-title">Library oversight</h2>
+    <p class="section-sub">Every file and link across the three library categories. Admin uploads here are attributed to your account like any member's.</p>
+    <div class="cat-tabs">
+      <button class="cat-tab active" data-cat="pdfs" onclick="switchCategory('pdfs')">PDF Bank</button>
+      <button class="cat-tab" data-cat="guides" onclick="switchCategory('guides')">Written Guides</button>
+      <button class="cat-tab" data-cat="videos" onclick="switchCategory('videos')">Video Library</button>
+    </div>
+
+    <div class="upload-panel" style="margin-bottom:24px; padding-bottom:20px; border-bottom:1px solid var(--line);">
+      <div class="mode-toggle">
+        <button type="button" class="mode-btn active" id="mode-btn-file" onclick="setUploadMode('file')">Upload a file</button>
+        <button type="button" class="mode-btn" id="mode-btn-link" onclick="setUploadMode('link')">Add a link instead</button>
+      </div>
+      <label for="up-title">Title</label>
+      <input type="text" id="up-title">
+      <label for="up-desc">Description</label>
+      <textarea id="up-desc" rows="2"></textarea>
+      <div id="up-file-field">
+        <label for="up-file">File</label>
+        <input type="file" id="up-file">
+      </div>
+      <div id="up-link-field" class="hidden">
+        <label for="up-url">Link</label>
+        <input type="text" id="up-url" placeholder="https://…">
+      </div>
+      <div class="form-error" id="up-error"></div>
+      <button class="btn btn-small" style="margin-top:16px; width:auto;" onclick="addLibraryItem()">Add to library</button>
+      <span class="save-msg" id="up-save-msg">Added</span>
+    </div>
+
+    <div id="library-table"><div class="loading-line">Loading library…</div></div>
+  </div>
+</div>
+
+<script>
+// Same backend as the main site.
+const API_BASE = 'https://buildthebackup-production.up.railway.app';
+
+async function api(path, options = {}) {
+  const res = await fetch(API_BASE + path, {
+    credentials: 'include',
+    headers: options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  let data = null;
+  try { data = await res.json(); } catch (e) {}
+  if (!res.ok) throw new Error((data && data.error) || `Request failed (${res.status})`);
+  return data;
+}
+
+function escapeHTML(str){ const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+function escapeAttr(str){ return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatBytes(bytes){ if (!bytes) return ''; if (bytes<1024) return bytes+' B'; if (bytes<1024*1024) return (bytes/1024).toFixed(0)+' KB'; return (bytes/(1024*1024)).toFixed(1)+' MB'; }
+
+let me = null;
+
+async function handleAdminLogin(){
+  const email = document.getElementById('admin-email').value.trim();
+  const password = document.getElementById('admin-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  try {
+    const { member } = await api('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    if (member.role !== 'admin') {
+      errEl.textContent = 'This account is not an admin.';
+      await api('/api/auth/logout', { method: 'POST' });
+      return;
+    }
+    me = member;
+    enterDashboard();
+  } catch (e) {
+    errEl.textContent = e.message;
+  }
+}
+
+function adminLogout(){
+  api('/api/auth/logout', { method: 'POST' }).finally(() => window.location.reload());
+}
+
+async function boot(){
+  try {
+    const { member } = await api('/api/auth/me');
+    if (member.role === 'admin') { me = member; enterDashboard(); }
+  } catch (e) { /* not logged in — show login screen */ }
+}
+
+function enterDashboard(){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+  document.getElementById('who-line').textContent = me.name + ' · ' + me.email;
+  loadMembers();
+  loadLibrary();
+}
+
+// ---------------- members ----------------
+async function loadMembers(){
+  const el = document.getElementById('members-table');
+  el.innerHTML = '<div class="loading-line">Loading members…</div>';
+  try {
+    const members = await api('/api/admin/members');
+    if (!members.length) { el.innerHTML = '<p class="empty-state">No members yet.</p>'; return; }
+    el.innerHTML = `
+      <table>
+        <thead><tr>
+          <th>Name</th><th>Email</th><th>Status</th><th>Tier</th><th>Uploads</th><th></th>
+        </tr></thead>
+        <tbody>
+          ${members.map(m => `
+            <tr>
+              <td>${escapeHTML(m.name)}${m.role === 'admin' ? ' <span class="badge admin">admin</span>' : ''}</td>
+              <td class="mono">${escapeHTML(m.email)}</td>
+              <td><span class="badge ${m.status}">${m.status}</span></td>
+              <td class="mono">${m.tierLabel ? escapeHTML(m.tierLabel.split(' — ')[0]) + ' · $' + m.tierPrice + '/yr' : '—'}</td>
+              <td>${m.uploadsBlocked ? '<span class="badge blocked">paused</span>' : '<span class="badge active">ok</span>'}</td>
+              <td>${m.role === 'admin' ? '' : m.uploadsBlocked
+                ? `<button class="btn btn-ghost btn-small" onclick="toggleUploads(${m.id}, false)">Unpause uploads</button>`
+                : `<button class="btn btn-ghost btn-small" onclick="toggleUploads(${m.id}, true)">Pause uploads</button>`}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  } catch (e) { el.innerHTML = `<p class="empty-state">${e.message}</p>`; }
+}
+
+async function toggleUploads(memberId, block){
+  try {
+    await api(`/api/admin/members/${memberId}/${block ? 'block-uploads' : 'unblock-uploads'}`, { method: 'POST' });
+    await loadMembers();
+  } catch (e) { alert(e.message); }
+}
+
+// ---------------- library oversight ----------------
+const CATEGORIES = { pdfs: 'PDF Bank', guides: 'Written Guides', videos: 'Video Library' };
+let currentCategory = 'pdfs';
+let uploadMode = 'file';
+
+function switchCategory(cat){
+  currentCategory = cat;
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  loadLibrary();
+}
+
+function setUploadMode(mode){
+  uploadMode = mode;
+  document.getElementById('mode-btn-file').classList.toggle('active', mode === 'file');
+  document.getElementById('mode-btn-link').classList.toggle('active', mode === 'link');
+  document.getElementById('up-file-field').classList.toggle('hidden', mode !== 'file');
+  document.getElementById('up-link-field').classList.toggle('hidden', mode !== 'link');
+  document.getElementById('up-error').textContent = '';
+}
+
+async function loadLibrary(){
+  const el = document.getElementById('library-table');
+  el.innerHTML = '<div class="loading-line">Loading…</div>';
+  try {
+    const items = await api(`/api/library/categories/${currentCategory}/items`);
+    if (!items.length) { el.innerHTML = '<p class="empty-state">Nothing in this category yet.</p>'; return; }
+    el.innerHTML = `
+      <table>
+        <thead><tr><th>Title</th><th>Uploaded by</th><th>Type</th><th>Date</th><th></th></tr></thead>
+        <tbody>
+          ${items.map(i => `
+            <tr>
+              <td>${i.type === 'file' ? escapeHTML(i.title) : `<a class="resource-link" href="${escapeAttr(i.url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(i.title)}</a>`}</td>
+              <td>${escapeHTML(i.author)}</td>
+              <td class="mono">${i.type === 'file' ? 'FILE · ' + formatBytes(i.fileSize) : 'LINK'}</td>
+              <td class="mono">${new Date(i.date).toLocaleDateString()}</td>
+              <td>
+                ${i.type === 'file' ? `<a class="resource-link" style="margin-right:14px;" href="${API_BASE}/api/library/items/${i.id}/download">Download</a>` : ''}
+                <button class="del-link" onclick="deleteLibraryItem(${i.id})">Delete</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  } catch (e) { el.innerHTML = `<p class="empty-state">${e.message}</p>`; }
+}
+
+async function addLibraryItem(){
+  const titleEl = document.getElementById('up-title');
+  const descEl = document.getElementById('up-desc');
+  const urlEl = document.getElementById('up-url');
+  const fileEl = document.getElementById('up-file');
+  const errEl = document.getElementById('up-error');
+  const title = titleEl.value.trim();
+  if (!title) { errEl.textContent = 'A title is required.'; return; }
+  errEl.textContent = '';
+  try {
+    if (uploadMode === 'file') {
+      const file = fileEl.files[0];
+      if (!file) { errEl.textContent = 'Choose a file, or switch to "Add a link instead".'; return; }
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('title', title);
+      formData.append('desc', descEl.value.trim());
+      await api(`/api/library/categories/${currentCategory}/file`, { method: 'POST', body: formData });
+    } else {
+      const url = urlEl.value.trim();
+      if (!url) { errEl.textContent = 'A link is required.'; return; }
+      await api(`/api/library/categories/${currentCategory}/link`, { method: 'POST', body: JSON.stringify({ title, desc: descEl.value.trim(), url }) });
+    }
+    titleEl.value = ''; descEl.value = ''; urlEl.value = ''; fileEl.value = '';
+    await loadLibrary();
+    const msg = document.getElementById('up-save-msg');
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 1800);
+  } catch (e) { errEl.textContent = e.message; }
+}
+
+async function deleteLibraryItem(id){
+  if (!confirm('Delete this item for everyone? This cannot be undone.')) return;
+  try { await api(`/api/library/items/${id}`, { method: 'DELETE' }); await loadLibrary(); } catch (e) { alert(e.message); }
+}
+
+document.getElementById('admin-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAdminLogin(); });
+
+boot();
+</script>
+</body>
+</html>
