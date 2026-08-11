@@ -984,9 +984,12 @@ async function renderResources(){
     list.innerHTML = items.map(item => {
       const titleHtml = item.type === 'file' ? escapeHTML(item.title)
         : `<a class="resource-link" href="${escapeAttr(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(item.title)}</a>`;
-      const downloadHref = previewMode ? item.blobUrl : `${API_BASE}/api/library/items/${item.id}/download`;
+      const downloadHref = previewMode ? item.blobUrl : null;
       const actionHtml = item.type === 'file'
-        ? `<a class="dl-btn" href="${downloadHref}" download="${escapeAttr(item.fileName || item.title)}">Download${item.fileSize ? ' (' + formatBytes(item.fileSize) + ')' : ''}</a>` : '';
+        ? (previewMode
+            ? `<a class="dl-btn" href="${downloadHref}" download="${escapeAttr(item.fileName || item.title)}">Download${item.fileSize ? ' (' + formatBytes(item.fileSize) + ')' : ''}</a>`
+            : `<button class="dl-btn" onclick="downloadLibraryFile(${item.id}, '${escapeAttr(item.fileName || item.title)}')">Download${item.fileSize ? ' (' + formatBytes(item.fileSize) + ')' : ''}</button>`)
+        : '';
       const deleteHtml = item.canDelete ? `<button class="post-delete" onclick="deleteResource(${item.id})">Delete</button>` : '';
       return `
         <div class="post">
@@ -1026,6 +1029,33 @@ async function addResource(){
 }
 async function deleteResource(id){
   try { await api(`/api/library/items/${id}`, { method: 'DELETE' }); await renderResources(); await renderLibraryDirectory(); } catch (e) {}
+}
+
+// Downloads go through fetch+credentials rather than a plain cross-origin <a href> link.
+// A plain link with a `download` attribute pointing at a different origin is unreliable across
+// browsers for sending the session cookie — some treat it like a background fetch rather than a
+// full page navigation for cookie purposes, so the request can arrive looking logged-out even
+// when the user genuinely is. Fetching it ourselves with credentials, then saving the resulting
+// blob via a same-origin blob: URL, sidesteps that ambiguity entirely.
+async function downloadLibraryFile(itemId, filename){
+  try {
+    const res = await fetch(`${API_BASE}/api/library/items/${itemId}/download`, { credentials: 'include' });
+    if (!res.ok) {
+      let message = `Download failed (${res.status})`;
+      try { const data = await res.json(); if (data && data.error) message = data.error; } catch (e) {}
+      alert(message);
+      return;
+    }
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
+  } catch (e) {
+    alert('Could not download this file — check your connection and try again.');
+  }
 }
 
 // ---------------- member directory ----------------

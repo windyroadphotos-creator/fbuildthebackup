@@ -279,7 +279,7 @@ async function loadLibrary(){
               <td class="mono">${i.type === 'file' ? 'FILE · ' + formatBytes(i.fileSize) : 'LINK'}</td>
               <td class="mono">${new Date(i.date).toLocaleDateString()}</td>
               <td>
-                ${i.type === 'file' ? `<a class="resource-link" style="margin-right:14px;" href="${API_BASE}/api/library/items/${i.id}/download">Download</a>` : ''}
+                ${i.type === 'file' ? `<button class="resource-link" style="margin-right:14px; background:none; border:none; cursor:pointer; text-decoration:underline; font-family:inherit; font-size:inherit; padding:0;" onclick="downloadLibraryFile(${i.id}, '${escapeAttr(i.title)}')">Download</button>` : ''}
                 <button class="del-link" onclick="deleteLibraryItem(${i.id})">Delete</button>
               </td>
             </tr>
@@ -323,6 +323,29 @@ async function addLibraryItem(){
 async function deleteLibraryItem(id){
   if (!confirm('Delete this item for everyone? This cannot be undone.')) return;
   try { await api(`/api/library/items/${id}`, { method: 'DELETE' }); await loadLibrary(); } catch (e) { alert(e.message); }
+}
+
+// Same reasoning as index.html: fetch+credentials+blob is more reliable across browsers than a
+// plain cross-origin link for sending the session cookie correctly.
+async function downloadLibraryFile(itemId, filename){
+  try {
+    const res = await fetch(`${API_BASE}/api/library/items/${itemId}/download`, { credentials: 'include' });
+    if (!res.ok) {
+      let message = `Download failed (${res.status})`;
+      try { const data = await res.json(); if (data && data.error) message = data.error; } catch (e) {}
+      alert(message);
+      return;
+    }
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
+  } catch (e) {
+    alert('Could not download this file — check your connection and try again.');
+  }
 }
 
 document.getElementById('admin-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleAdminLogin(); });
