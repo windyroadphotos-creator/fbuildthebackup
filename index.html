@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Build The Backup — Offline Resilience, Privacy & Communication</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="shortcut icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -76,6 +81,13 @@
   .tier-ladder{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-bottom:20px; }
   .tier-card{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:26px; position:relative; }
   .tier-card.current{ border-color:var(--accent-orange); box-shadow:0 0 0 1px var(--accent-orange); }
+
+  .lead-magnet-panel{ background:var(--bg-panel); border:1px solid var(--accent-orange); border-radius:var(--radius); padding:32px 36px; display:flex; align-items:center; justify-content:space-between; gap:36px; flex-wrap:wrap; }
+  .lead-magnet-form{ min-width:280px; flex:1; max-width:360px; }
+  .lead-magnet-form input{ width:100%; padding:12px 14px; background:var(--bg-deep); border:1px solid var(--line); border-radius:var(--radius); color:var(--text-paper); font-family:'Space Mono', monospace; font-size:13.5px; margin-bottom:10px; }
+  .lead-magnet-form input:focus{ outline:none; border-color:var(--accent-orange); }
+  .lead-magnet-form .btn{ width:100%; padding:12px; }
+  @media (max-width:700px){ .lead-magnet-panel{ padding:26px 24px; } }
   .tier-card.sold_out{ opacity:0.55; }
   .tier-card .tier-badge{ position:absolute; top:-11px; right:20px; background:var(--accent-orange); color:#14181A; font-family:'Space Mono', monospace; font-size:10px; letter-spacing:0.08em; padding:4px 9px; border-radius:2px; text-transform:uppercase; font-weight:700; }
   .tier-card .tier-label{ font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.08em; color:var(--text-muted); text-transform:uppercase; margin-bottom:10px; }
@@ -186,7 +198,7 @@
     <h1>The internet is a <span>single point of failure.</span><br>Build the backup.</h1>
     <p class="lede">Build The Backup is where people quietly prepare for the day the network doesn't come back up — offline resources, real privacy practice, and ways to talk to each other that don't touch a tower.</p>
     <div class="hero-ctas">
-      <button class="btn btn-solid" onclick="document.getElementById('join').scrollIntoView()">Claim a founding spot</button>
+      <button class="btn btn-solid" onclick="document.getElementById('join').scrollIntoView()">Claim your spot</button>
       <button class="btn" onclick="document.getElementById('rooms').scrollIntoView()">See the rooms</button>
     </div>
     <div class="meter-panel">
@@ -194,6 +206,23 @@
       <div class="meter-label">CONNECTION STATUS: <span class="flash">INTERMITTENT</span> — plan accordingly</div>
     </div>
   </header>
+
+  <section class="wrap" style="padding: 0 28px 40px;">
+    <div class="lead-magnet-panel">
+      <div>
+        <p class="eyebrow" style="margin-bottom:14px;">Free download</p>
+        <h2 style="font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; font-size:26px; margin:0 0 10px;">The 72-Hour Offline Readiness Checklist</h2>
+        <p style="color:var(--text-muted); font-size:14.5px; margin:0; max-width:480px;">Twelve categories, plainly listed — water, power, comms, documents, and the rest. No membership required, just an email.</p>
+      </div>
+      <div class="lead-magnet-form">
+        <input type="text" id="lead-email" placeholder="you@example.com" autocomplete="email">
+        <button class="btn btn-solid" onclick="submitLeadMagnet()" id="lead-submit-btn">Send me the checklist →</button>
+        <div class="form-error" id="lead-error" style="margin:8px 0 0;"></div>
+        <div id="lead-success" class="hidden" style="font-family:'Space Mono', monospace; font-size:12.5px; color:var(--accent-olive); margin-top:8px;">Check your inbox — it's on its way.</div>
+        <p style="font-size:11.5px; color:var(--text-muted); margin:10px 0 0;">No spam — just the checklist, and occasional word from Build The Backup.</p>
+      </div>
+    </div>
+  </section>
 
   <section class="pillars-section wrap" id="pillars">
     <div class="section-head">
@@ -228,7 +257,7 @@
   </section>
 
   <section class="pricing-section wrap" id="join">
-    <div class="section-head"><h2>Founding membership</h2><p>Price rises as the room fills, then holds. Whatever annual rate you join at is locked in for as long as you stay a member.</p></div>
+    <div class="section-head"><h2>Membership</h2><p>Price rises as the room fills, then holds. Whatever annual rate you join at is locked in for as long as you stay a member.</p></div>
     <div class="tier-ladder" id="tier-ladder"><div class="loading-line">Checking current tier…</div></div>
 
     <div class="join-panel">
@@ -236,7 +265,7 @@
         <button type="button" class="mode-btn active" id="auth-mode-join" onclick="setAuthMode('join')">Create account</button>
         <button type="button" class="mode-btn" id="auth-mode-login" onclick="setAuthMode('login')">Log in</button>
       </div>
-      <button class="btn" style="width:100%; padding:11px; margin-bottom:24px;" onclick="previewJoin()">Just want to look around? Preview the member area (no backend needed) →</button>
+      <button class="btn" style="width:100%; padding:11px; margin-bottom:24px;" onclick="previewJoin()">Just want to look around? Preview the member area →</button>
 
       <div id="auth-join-panel">
         <h2>Reserve your spot.</h2>
@@ -292,7 +321,7 @@
 
   <footer class="wrap">
     <span>BUILD THE BACKUP — offline resources, privacy, and communication</span>
-    <span><a href="disclaimer.html" style="color:var(--text-muted); text-decoration:none;">Content Disclaimer</a> &nbsp;·&nbsp; © 2026</span>
+    <span><a href="free-guide.html" style="color:var(--text-muted); text-decoration:none;">Free Checklist</a> &nbsp;·&nbsp; <a href="disclaimer.html" style="color:var(--text-muted); text-decoration:none;">Content Disclaimer</a> &nbsp;·&nbsp; © 2026</span>
   </footer>
 </div>
 
@@ -710,7 +739,7 @@ async function renderPricing() {
         ${t.cap ? `<div class="tier-fill-track"><div class="tier-fill" style="width:${Math.round((t.claimed / t.cap) * 100)}%"></div></div>` : ''}
       </div>`).join('');
   } catch (e) {
-    ladder.innerHTML = `<p class="empty-state">Could not load pricing — is the backend running at ${API_BASE}?</p>`;
+    ladder.innerHTML = `<p class="empty-state">Could not load pricing right now — please refresh, or try again in a moment.</p>`;
   }
 }
 

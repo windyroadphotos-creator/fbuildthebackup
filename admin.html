@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Build The Backup — Admin</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="shortcut icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -111,6 +116,17 @@
   </div>
 
   <div class="panel">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
+      <div>
+        <h2 class="section-title">Lead magnet signups</h2>
+        <p class="section-sub">Everyone who's requested the free 72-Hour Checklist. Each row got (or should have gotten) the PDF emailed automatically — anything marked "failed" can be resent manually.</p>
+      </div>
+      <a class="btn btn-ghost btn-small" style="text-decoration:none; display:inline-block; white-space:nowrap;" href="#" onclick="downloadLeadsCsv(); return false;">Download CSV →</a>
+    </div>
+    <div id="leads-table"><div class="loading-line">Loading leads…</div></div>
+  </div>
+
+  <div class="panel">
     <h2 class="section-title">Library oversight</h2>
     <p class="section-sub">Every file and link across the three library categories. Admin uploads here are attributed to your account like any member's.</p>
     <div class="cat-tabs">
@@ -202,6 +218,7 @@ function enterDashboard(){
   document.getElementById('dashboard').classList.remove('hidden');
   document.getElementById('who-line').textContent = me.name + ' · ' + me.email;
   loadMembers();
+  loadLeads();
   loadLibrary();
 }
 
@@ -240,6 +257,56 @@ async function toggleUploads(memberId, block){
     await api(`/api/admin/members/${memberId}/${block ? 'block-uploads' : 'unblock-uploads'}`, { method: 'POST' });
     await loadMembers();
   } catch (e) { alert(e.message); }
+}
+
+// ---------------- lead magnet signups ----------------
+async function loadLeads(){
+  const el = document.getElementById('leads-table');
+  el.innerHTML = '<div class="loading-line">Loading leads…</div>';
+  try {
+    const leads = await api('/api/leads');
+    if (!leads.length) { el.innerHTML = '<p class="empty-state">No signups yet.</p>'; return; }
+    el.innerHTML = `
+      <table>
+        <thead><tr><th>Email</th><th>Name</th><th>Status</th><th>Date</th><th></th></tr></thead>
+        <tbody>
+          ${leads.map(l => `
+            <tr>
+              <td class="mono">${escapeHTML(l.email)}</td>
+              <td>${escapeHTML(l.name || '—')}</td>
+              <td>${l.delivered ? '<span class="badge active">delivered</span>' : `<span class="badge blocked" title="${escapeAttr(l.deliveryError || '')}">failed</span>`}</td>
+              <td class="mono">${new Date(l.createdAt).toLocaleDateString()}</td>
+              <td>${!l.delivered ? `<button class="btn btn-ghost btn-small" onclick="resendLead(${l.id})">Resend</button>` : ''}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>`;
+  } catch (e) { el.innerHTML = `<p class="empty-state">${e.message}</p>`; }
+}
+
+async function resendLead(id){
+  try {
+    await api(`/api/leads/${id}/resend`, { method: 'POST' });
+    await loadLeads();
+  } catch (e) { alert(e.message); }
+}
+
+// A plain link to a cross-origin URL is unreliable for sending the session cookie (same reasoning
+// as file downloads elsewhere in this app) — fetch it with credentials instead, then save the blob.
+async function downloadLeadsCsv(){
+  try {
+    const res = await fetch(`${API_BASE}/api/leads/export`, { credentials: 'include' });
+    if (!res.ok) { alert(`Could not export (${res.status})`); return; }
+    const blob = await res.blob();
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = 'build-the-backup-leads.csv';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 4000);
+  } catch (e) {
+    alert('Could not download the export — check your connection and try again.');
+  }
 }
 
 // ---------------- library oversight ----------------
