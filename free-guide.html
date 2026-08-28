@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Free: The 72-Hour Offline Readiness Checklist — Build The Backup</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#14181A; --bg-panel:#1C2320; --bg-panel-light:#252E29;
+    --accent-olive:#8A9A5B; --accent-orange:#E2572B;
+    --text-paper:#EDEAE2; --text-muted:#93A08D; --line:rgba(237,234,226,0.13); --radius:2px;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; background:var(--bg-deep); color:var(--text-paper); font-family:'IBM Plex Sans', sans-serif; line-height:1.65; }
+  .mono{ font-family:'Space Mono', monospace; }
+  a{ color:var(--accent-orange); }
+  .hidden{ display:none !important; }
+  .wrap{ max-width:640px; margin:0 auto; padding:0 28px; }
+
+  .nav{ display:flex; align-items:center; padding:26px 28px; max-width:640px; margin:0 auto; }
+  .nav .logo{ font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; font-size:18px; letter-spacing:0.02em; text-decoration:none; color:var(--text-paper); }
+  .nav .logo span{ color:var(--accent-orange); }
+
+  .hero{ padding:36px 0 20px; text-align:center; }
+  .eyebrow{ font-family:'Space Mono', monospace; font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:var(--accent-orange); margin:0 0 20px; }
+  h1{ font-family:'Oswald', sans-serif; font-weight:600; text-transform:uppercase; font-size:clamp(30px,6vw,44px); line-height:1.12; margin:0 0 20px; }
+  h1 em{ font-style:normal; color:var(--accent-orange); }
+  .lede{ font-size:16px; color:var(--text-muted); max-width:480px; margin:0 auto 34px; }
+
+  .doc-preview{ display:flex; justify-content:center; margin-bottom:34px; }
+
+  .signup-card{ background:var(--bg-panel); border:1px solid var(--line); border-radius:var(--radius); padding:34px 32px; margin-bottom:40px; }
+  .signup-card h2{ font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:600; font-size:18px; margin:0 0 6px; text-align:center; }
+  .signup-card .sub{ text-align:center; font-size:13.5px; color:var(--text-muted); margin:0 0 24px; }
+  .field label{ display:block; font-family:'Space Mono', monospace; font-size:11px; letter-spacing:0.06em; text-transform:uppercase; color:var(--text-muted); margin:0 0 8px; }
+  .field input{ width:100%; padding:13px 14px; background:var(--bg-deep); border:1px solid var(--line); border-radius:var(--radius); color:var(--text-paper); font-family:'Space Mono', monospace; font-size:14px; margin-bottom:16px; }
+  .field input:focus{ outline:none; border-color:var(--accent-orange); }
+  .btn{ width:100%; font-family:'Space Mono', monospace; font-size:13px; text-transform:uppercase; letter-spacing:0.05em; padding:14px 20px; border-radius:var(--radius); border:1px solid var(--accent-orange); background:var(--accent-orange); color:#14181A; font-weight:700; cursor:pointer; }
+  .btn:hover{ background:#ef6c42; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+  .form-error{ color:var(--accent-orange); font-family:'Space Mono', monospace; font-size:12px; margin:0 0 12px; min-height:14px; text-align:center; }
+  .fine-print{ font-size:11.5px; color:var(--text-muted); text-align:center; margin-top:16px; line-height:1.6; }
+  .fine-print a{ color:var(--text-muted); text-decoration:underline; }
+
+  .success-card{ background:var(--bg-panel); border:1px solid var(--accent-olive); border-radius:var(--radius); padding:40px 32px; margin-bottom:40px; text-align:center; }
+  .success-card .check-tag{ font-family:'Space Mono', monospace; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent-olive); margin-bottom:14px; }
+  .success-card h2{ font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:600; font-size:22px; margin:0 0 14px; }
+  .success-card p{ font-size:14px; color:var(--text-muted); margin:0 0 8px; max-width:420px; margin-left:auto; margin-right:auto; }
+
+  .whats-inside{ margin-bottom:50px; }
+  .whats-inside h3{ font-family:'Oswald', sans-serif; text-transform:uppercase; font-weight:600; font-size:15px; letter-spacing:0.04em; color:var(--text-muted); text-align:center; margin:0 0 18px; }
+  .inside-list{ list-style:none; margin:0; padding:0; }
+  .inside-list li{ padding:12px 0; border-top:1px solid var(--line); font-size:14px; color:var(--text-paper); display:flex; gap:12px; align-items:flex-start; }
+  .inside-list li:last-child{ border-bottom:1px solid var(--line); }
+  .inside-list li .dot{ width:6px; height:6px; border-radius:50%; background:var(--accent-olive); margin-top:8px; flex-shrink:0; }
+
+  .cta-box{ border:1px solid var(--line); border-radius:var(--radius); padding:26px 28px; margin-bottom:60px; text-align:center; }
+  .cta-box .tag{ font-family:'Space Mono', monospace; font-size:11px; letter-spacing:1.5px; color:var(--accent-orange); text-transform:uppercase; margin-bottom:10px; }
+  .cta-box p{ font-size:13.5px; color:var(--text-muted); margin:0 0 16px; }
+
+  footer{ padding:26px 0 50px; border-top:1px solid var(--line); font-family:'Space Mono', monospace; font-size:11px; color:var(--text-muted); text-align:center; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="logo">BUILD THE <span>BACKUP</span></a>
+</nav>
+
+<div class="wrap">
+  <header class="hero">
+    <p class="eyebrow">Free field guide — no membership required</p>
+    <h1>The 72-Hour <em>Offline Readiness</em> Checklist</h1>
+    <p class="lede">Four pillars, a risk assessment, real off-grid systems, and a 90-day plan — built for going past the basics. We'll email you the PDF right now.</p>
+  </header>
+
+  <div id="signup-view">
+    <div class="signup-card">
+      <h2>Get the free checklist</h2>
+      <p class="sub">One email, sent once. No spam, no recurring newsletter.</p>
+      <div class="field">
+        <label for="lead-name">First name (optional)</label>
+        <input type="text" id="lead-name" placeholder="Jordan" autocomplete="given-name">
+      </div>
+      <div class="field">
+        <label for="lead-email">Email</label>
+        <input type="text" id="lead-email" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-error" id="lead-error"></div>
+      <button class="btn" id="lead-submit-btn" onclick="handleLeadSubmit()">Send me the checklist →</button>
+      <p class="fine-print">By submitting, you'll get one email with your PDF attached. See our <a href="disclaimer.html" target="_blank">Content Disclaimer</a> for how we handle things.</p>
+    </div>
+  </div>
+
+  <div id="success-view" class="hidden">
+    <div class="success-card">
+      <div class="check-tag">✓ Sent</div>
+      <h2>Check your inbox.</h2>
+      <p id="success-message">Your checklist is on its way — it can take a few minutes to arrive. Check spam if you don't see it, and add us to your contacts so the next one doesn't land there.</p>
+    </div>
+  </div>
+
+  <div class="whats-inside">
+    <h3>What's actually in it</h3>
+    <ul class="inside-list">
+      <li><span class="dot"></span> A four-pillar framework and risk self-assessment — not a flat list, a way to think about it</li>
+      <li><span class="dot"></span> Real off-grid systems: rainwater catchment math, food preservation, and sizing your own solar/battery setup with worked examples</li>
+      <li><span class="dot"></span> Winlink — sending real email over radio with zero internet connection, for when the towers are down for good</li>
+      <li><span class="dot"></span> Two worked scenarios, a 90-day roadmap, and a fill-in family plan page — metric units throughout, imperial in brackets</li>
+    </ul>
+  </div>
+
+  <div class="cta-box">
+    <div class="tag">Beyond the checklist</div>
+    <p>If you want to go further than a PDF — real member forums, a growing resource library, and encrypted private rooms — Build The Backup is a members' community built around exactly this.</p>
+    <a href="index.html#join" class="mono" style="font-size:13px; text-transform:uppercase; letter-spacing:0.04em;">See membership →</a>
+  </div>
+
+  <footer>
+    BUILD THE BACKUP — OFFLINE RESOURCES, PRIVACY, AND COMMUNICATION
+  </footer>
+</div>
+
+<script>
+  // EDIT ME if your backend lives elsewhere — same value as index.html / admin.html.
+  const API_BASE = 'https://buildthebackup-production.up.railway.app';
+
+  async function handleLeadSubmit(){
+    const name = document.getElementById('lead-name').value.trim();
+    const email = document.getElementById('lead-email').value.trim();
+    const errEl = document.getElementById('lead-error');
+    const btn = document.getElementById('lead-submit-btn');
+    errEl.textContent = '';
+
+    if (!email || !email.includes('@')) {
+      errEl.textContent = 'Enter a valid email address.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    try {
+      const res = await fetch(API_BASE + '/api/leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Something went wrong. Try again.');
+
+      document.getElementById('signup-view').classList.add('hidden');
+      document.getElementById('success-view').classList.remove('hidden');
+      if (data.delivered === false) {
+        document.getElementById('success-message').textContent =
+          "You're on the list, but the email hit a snag on our end sending it out. We'll get it sorted — try checking back in a bit, or reach out if it doesn't show up.";
+      }
+    } catch (e) {
+      errEl.textContent = e.message;
+      btn.disabled = false;
+      btn.textContent = 'Send me the checklist →';
+    }
+  }
+
+  document.getElementById('lead-email').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLeadSubmit(); });
+</script>
+</body>
+</html>
